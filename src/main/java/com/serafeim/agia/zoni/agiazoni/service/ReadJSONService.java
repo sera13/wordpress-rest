@@ -34,7 +34,16 @@ public class ReadJSONService {
                 System.out.println(jsonNode.path("title").asText());
                 article.setContent(jsonNode.path("maintext").asText());
                 article.setSource(jsonNode.path("source").asText());
-                article.setEnnoima(jsonNode.path("idees1").asText() + " " + jsonNode.path("idees2").asText() + " " + jsonNode.path("idees3").asText() + " " + jsonNode.path("idees4").asText() + " " + jsonNode.path("idees5").asText() + " " + jsonNode.path("idees6").asText() + " " + jsonNode.path("idees7").asText() + " " + jsonNode.path("idees8").asText() + " " + jsonNode.path("idees9").asText() + " " + jsonNode.path("idees10").asText());
+                article.setEnnoima(jsonNode.path("idees1").asText() +
+                        " " + jsonNode.path("idees2").asText() +
+                        " " + jsonNode.path("idees3").asText() +
+                        " " + jsonNode.path("idees4").asText() +
+                        " " + jsonNode.path("idees5").asText() +
+                        " " + jsonNode.path("idees6").asText() +
+                        " " + jsonNode.path("idees7").asText() +
+                        " " + jsonNode.path("idees8").asText() +
+                        " " + jsonNode.path("idees9").asText() +
+                        " " + jsonNode.path("idees10").asText());
                 article.setTags(Arrays.asList(jsonNode.path("articleTopics").asText().split("\\s*,\\s*")));
                 article.setCategories(Arrays.asList(jsonNode.path("category").asText().split("\\s*,\\s*")));
                 article.setArticle_author(Arrays.asList(jsonNode.path("articleAuthors").asText().split("\\s*,\\s*")));
