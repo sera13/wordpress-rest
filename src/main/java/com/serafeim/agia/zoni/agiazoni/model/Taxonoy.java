@@ -1,6 +1,6 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-public class Taxonoy {
+public class Taxonoy implements Comparable<Taxonoy> {
     String description;
     String name;
     String slug;
@@ -43,5 +43,10 @@ public class Taxonoy {
 
     public void setMeta(String meta) {
         this.meta = meta;
+    }
+
+    @Override
+    public int compareTo(Taxonoy taxonoy) {
+        return this.name.compareTo(taxonoy.getName());
     }
 }

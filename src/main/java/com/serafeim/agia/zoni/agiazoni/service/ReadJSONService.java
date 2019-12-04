@@ -23,9 +23,9 @@ public class ReadJSONService {
     @PostConstruct
     public void readJson() throws IOException {
         List<Article> articles = new ArrayList();
-        Set<Tag> tags = new HashSet<>();
-        Set<Category> categories = new HashSet<>();
-        Set<ArticleAuthor> articleAuthors = new HashSet<>();
+        Set<Tag> tags = new TreeSet<>();
+        Set<Category> categories = new TreeSet<>();
+        Set<ArticleAuthor> articleAuthors = new TreeSet<>();
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
@@ -92,8 +92,8 @@ public class ReadJSONService {
 
     private Set<ArticleAuthor> createArticleAuthors(String authors, Article article) {
         List<String> articleAuthorsText = Arrays.asList(authors.split("\\s*,\\s*"));
-        article.setArticle_author(new HashSet<>(articleAuthorsText));
-        Set<ArticleAuthor> articleAuthors = new HashSet<>();
+        article.setArticle_author(new TreeSet<>(articleAuthorsText));
+        Set<ArticleAuthor> articleAuthors = new TreeSet<>();
 
         for (String articleAuthorName : articleAuthorsText) {
             articleAuthors.add(new ArticleAuthor(articleAuthorName, articleAuthorName, StringUtils.trimAllWhitespace(articleAuthorName), articleAuthorName));
@@ -103,8 +103,8 @@ public class ReadJSONService {
 
     private Set<Category> createArticleCategories(String category, Article article) {
         List<String> articleCategories = Arrays.asList(category.split("\\s*,\\s*"));
-        article.setCategories(new HashSet<>(articleCategories));
-        Set<Category> categories = new HashSet<>();
+        article.setCategories(new TreeSet<>(articleCategories));
+        Set<Category> categories = new TreeSet<>();
 
         for (String categoryName : articleCategories) {
             categories.add(new Category(categoryName, categoryName, StringUtils.trimAllWhitespace(categoryName), categoryName));
@@ -114,8 +114,8 @@ public class ReadJSONService {
 
     private Set<Tag> createArticleTags(String articleTopics, Article article) {
         List<String> tagsText = Arrays.asList(articleTopics.split("\\s*,\\s*"));
-        article.setTags(new HashSet<>(tagsText));
-        Set<Tag> tags = new HashSet<>();
+        article.setTags(new TreeSet<>(tagsText));
+        Set<Tag> tags = new TreeSet<>();
 
         for (String tagName : tagsText) {
             tags.add(new Tag(tagName, tagName, StringUtils.trimAllWhitespace(tagName), tagName));
