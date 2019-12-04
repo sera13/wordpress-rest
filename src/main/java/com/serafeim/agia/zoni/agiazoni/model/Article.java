@@ -1,6 +1,6 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-import java.util.List;
+import java.util.Set;
 
 public class Article {
     public String date;
@@ -17,9 +17,9 @@ public class Article {
     public String sticky;
     public String format;
     public String meta;
-    public List<String> categories;
-    public List<String> tags;
-    public List<String> article_author;
+    public Set<String> categories;
+    public Set<String> tags;
+    public Set<String> article_author;
     public String ennoima;
     public String source;
 
@@ -138,27 +138,27 @@ public class Article {
         this.meta = meta;
     }
 
-    public List<String> getCategories() {
+    public Set<String> getCategories() {
         return this.categories;
     }
 
-    public void setCategories(List<String> categories) {
+    public void setCategories(Set<String> categories) {
         this.categories = categories;
     }
 
-    public List<String> getTags() {
+    public Set<String> getTags() {
         return this.tags;
     }
 
-    public void setTags(List<String> tags) {
+    public void setTags(Set<String> tags) {
         this.tags = tags;
     }
 
-    public List<String> getArticle_author() {
+    public Set<String> getArticle_author() {
         return this.article_author;
     }
 
-    public void setArticle_author(List<String> article_author) {
+    public void setArticle_author(Set<String> article_author) {
         this.article_author = article_author;
     }
 
