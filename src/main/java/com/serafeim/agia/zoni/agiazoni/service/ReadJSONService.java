@@ -2,10 +2,7 @@ package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.Article;
-import com.serafeim.agia.zoni.agiazoni.model.ArticleAuthor;
-import com.serafeim.agia.zoni.agiazoni.model.Category;
-import com.serafeim.agia.zoni.agiazoni.model.Tag;
+import com.serafeim.agia.zoni.agiazoni.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,6 +23,7 @@ public class ReadJSONService {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
+        Source articleSource;
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
@@ -42,7 +40,10 @@ public class ReadJSONService {
                 article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setContent(jsonNode.path("maintext").asText());
-                article.setSource(jsonNode.path("source").asText());
+                //TODO create source like other taxonomies
+                String sourceText = jsonNode.path("source").asText();
+                articleSource = new Source(sourceText, sourceText, StringUtils.trimAllWhitespace(sourceText));
+                article.setSource(sourceText);
 
                 String ennoima = jsonNode.path("idees1").asText() +
                         " " + jsonNode.path("idees2").asText() +
@@ -96,7 +97,7 @@ public class ReadJSONService {
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
 
         for (String articleAuthorName : articleAuthorsText) {
-            articleAuthors.add(new ArticleAuthor(articleAuthorName, articleAuthorName, StringUtils.trimAllWhitespace(articleAuthorName), articleAuthorName));
+            articleAuthors.add(new ArticleAuthor(articleAuthorName, articleAuthorName, StringUtils.trimAllWhitespace(articleAuthorName)));
         }
         return articleAuthors;
     }
@@ -107,7 +108,8 @@ public class ReadJSONService {
         Set<Category> categories = new TreeSet<>();
 
         for (String categoryName : articleCategories) {
-            categories.add(new Category(categoryName, categoryName, StringUtils.trimAllWhitespace(categoryName), categoryName));
+            //TODO define the parent
+            categories.add(new Category(categoryName, categoryName, StringUtils.trimAllWhitespace(categoryName), 0));
         }
         return categories;
     }
@@ -118,7 +120,7 @@ public class ReadJSONService {
         Set<Tag> tags = new TreeSet<>();
 
         for (String tagName : tagsText) {
-            tags.add(new Tag(tagName, tagName, StringUtils.trimAllWhitespace(tagName), tagName));
+            tags.add(new Tag(tagName, tagName, StringUtils.trimAllWhitespace(tagName)));
         }
         return tags;
     }

@@ -1,7 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-public class ArticleAuthor extends Taxonoy {
-    public ArticleAuthor(String description, String name, String slug, String meta) {
-        super(description, name, slug, meta);
+public class ArticleAuthor extends Taxonomy {
+    public ArticleAuthor(String description, String name, String slug) {
+        super(description, name, slug);
     }
 }

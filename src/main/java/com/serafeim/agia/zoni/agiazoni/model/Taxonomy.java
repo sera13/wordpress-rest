@@ -1,16 +1,16 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-public class Taxonoy implements Comparable<Taxonoy> {
+public class Taxonomy implements Comparable<Taxonomy> {
     String description;
     String name;
     String slug;
     String meta;
 
-    public Taxonoy(String description, String name, String slug, String meta) {
+    public Taxonomy(String description, String name, String slug) {
         this.description = description;
         this.name = name;
         this.slug = slug;
-        this.meta = meta;
+        this.meta = null;
     }
 
     public String getDescription() {
@@ -46,7 +46,7 @@ public class Taxonoy implements Comparable<Taxonoy> {
     }
 
     @Override
-    public int compareTo(Taxonoy taxonoy) {
-        return this.name.compareTo(taxonoy.getName());
+    public int compareTo(Taxonomy taxonomy) {
+        return this.name.compareTo(taxonomy.getName());
     }
 }

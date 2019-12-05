@@ -1,17 +1,18 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-public class Category extends Taxonoy {
-    String parent;
+public class Category extends Taxonomy {
+    Integer parent;
 
-    public Category(String description, String name, String slug, String meta) {
-        super(description, name, slug, meta);
+    public Category(String description, String name, String slug, Integer parent) {
+        super(description, name, slug);
+        this.setParent(parent);
     }
 
-    public String getParent() {
+    public Integer getParent() {
         return parent;
     }
 
-    public void setParent(String parent) {
+    public void setParent(Integer parent) {
         this.parent = parent;
     }
 }
