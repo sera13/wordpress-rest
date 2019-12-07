@@ -19,11 +19,59 @@ public class ReadJSONService {
 
     @PostConstruct
     public void readJson() throws IOException {
-        List<Article> articles = new ArrayList();
+//        createTaxonomyJsonFiles();
+        // TODO put this in another action
+        createArticlesJsonFile();
+
+
+    }
+
+    private void createTaxonomyJsonFiles() {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
-        Source articleSource;
+        Set<Source> articleSources = new TreeSet<>();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Set<Tag> articleTags = createArticleTags(jsonNode.path("articleTopics").asText());
+                Set<Category> articleCategories = createArticleCategories(jsonNode.path("category").asText());
+                Set<ArticleAuthor> articleArticleAuthors = createArticleAuthors(jsonNode.path("articleAuthors").asText());
+
+
+                String sourceText = jsonNode.path("source").asText();
+                Source articleSource = new Source(sourceText, sourceText, StringUtils.trimAllWhitespace(sourceText));
+
+                System.out.println(jsonNode.path("title").asText());
+
+                tags.addAll(articleTags);
+                categories.addAll(articleCategories);
+                articleAuthors.addAll(articleArticleAuthors);
+                articleSources.add(articleSource);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(tags, "tags.json");
+        createJsonFile(categories, "categories.json");
+        createJsonFile(articleAuthors, "articleAuthors.json");
+        createJsonFile(articleSources, "articleSources.json");
+    }
+
+    private void createArticlesJsonFile() {
+        List<Article> articles = new ArrayList();
+        Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
+        Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
+        Map<String, Integer> articleAuthors = createTaxonomyMap("wordpress_article_authors.json");
+        Map<String, Integer> articleSources = createTaxonomyMap("wordpress_sources.json");
+
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
@@ -32,18 +80,10 @@ public class ReadJSONService {
             for (JsonNode jsonNode : parser) {
                 Article article = new Article();
 
-                Set<Tag> articleTags = createArticleTags(jsonNode.path("articleTopics").asText(), article);
-                Set<Category> articleCategories = createArticleCategories(jsonNode.path("category").asText(), article);
-                Set<ArticleAuthor> articleArticleAuthors = createArticleAuthors(jsonNode.path("articleAuthors").asText(), article);
-
                 article.setStatus("publish");
                 article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setContent(jsonNode.path("maintext").asText());
-                //TODO create source like other taxonomies
-                String sourceText = jsonNode.path("source").asText();
-                articleSource = new Source(sourceText, sourceText, StringUtils.trimAllWhitespace(sourceText));
-                article.setSource(sourceText);
 
                 String ennoima = jsonNode.path("idees1").asText() +
                         " " + jsonNode.path("idees2").asText() +
@@ -58,11 +98,18 @@ public class ReadJSONService {
 
                 article.setEnnoima(ennoima.trim());
 
-                System.out.println(jsonNode.path("title").asText());
 
-                tags.addAll(articleTags);
-                categories.addAll(articleCategories);
-                articleAuthors.addAll(articleArticleAuthors);
+                Set<Integer> articleTags = getTaxonomyIdsByName(jsonNode.path("articleTopics").asText(), tags);
+                Set<Integer> articleCategories = getTaxonomyIdsByName(jsonNode.path("category").asText(), categories);
+                Set<Integer> articleArticleAuthors = getTaxonomyIdsByName(jsonNode.path("articleAuthors").asText(), articleAuthors);
+                Set<Integer> articleSource = getTaxonomyIdsByName(jsonNode.path("source").asText(), articleSources);
+
+
+                article.setTags(articleTags);
+                article.setCategories(articleCategories);
+                article.setArticle_author(articleArticleAuthors);
+                article.setSource(articleSource);
+
                 articles.add(article);
             }
 
@@ -73,10 +120,42 @@ public class ReadJSONService {
         }
 
         createJsonFile(articles, "articles.json");
-        createJsonFile(tags, "tags.json");
-        createJsonFile(categories, "categories.json");
-        createJsonFile(articleAuthors, "articleAuthors.json");
 
+
+    }
+
+    private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
+        List<String> taxonomiesTextList = Arrays.asList(tags.split("\\s*,\\s*"));
+        Set<Integer> taxonomiesIds = new TreeSet<>();
+
+        for (String taxonomy : taxonomiesTextList) {
+            Integer tagid = taxonomiesMap.get(taxonomy);
+            if (tagid != null) {
+                taxonomiesIds.add(tagid);
+            }
+        }
+        return taxonomiesIds;
+    }
+
+    private Map<String, Integer> createTaxonomyMap(String filename) {
+        Map<String, Integer> result = new HashMap<String, Integer>();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(filename));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Integer id = jsonNode.path("id").asInt();
+                String name = jsonNode.path("name").asText();
+                result.put(name, id);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private void createJsonFile(Collection contents, String filename) {
@@ -91,9 +170,9 @@ public class ReadJSONService {
         }
     }
 
-    private Set<ArticleAuthor> createArticleAuthors(String authors, Article article) {
+    private Set<ArticleAuthor> createArticleAuthors(String authors) {
         List<String> articleAuthorsText = Arrays.asList(authors.split("\\s*,\\s*"));
-        article.setArticle_author(new TreeSet<>(articleAuthorsText));
+//        article.setArticle_author(new TreeSet<>(articleAuthorsText));
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
 
         for (String articleAuthorName : articleAuthorsText) {
@@ -102,9 +181,9 @@ public class ReadJSONService {
         return articleAuthors;
     }
 
-    private Set<Category> createArticleCategories(String category, Article article) {
+    private Set<Category> createArticleCategories(String category) {
         List<String> articleCategories = Arrays.asList(category.split("\\s*,\\s*"));
-        article.setCategories(new TreeSet<>(articleCategories));
+//        article.setCategories(new TreeSet<>(articleCategories));
         Set<Category> categories = new TreeSet<>();
 
         for (String categoryName : articleCategories) {
@@ -114,9 +193,9 @@ public class ReadJSONService {
         return categories;
     }
 
-    private Set<Tag> createArticleTags(String articleTopics, Article article) {
+    private Set<Tag> createArticleTags(String articleTopics) {
         List<String> tagsText = Arrays.asList(articleTopics.split("\\s*,\\s*"));
-        article.setTags(new TreeSet<>(tagsText));
+//        article.setTags(new TreeSet<>(tagsText));
         Set<Tag> tags = new TreeSet<>();
 
         for (String tagName : tagsText) {

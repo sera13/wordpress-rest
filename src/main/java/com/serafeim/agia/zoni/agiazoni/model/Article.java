@@ -17,11 +17,11 @@ public class Article {
     public String sticky;
     public String format;
     public String meta;
-    public Set<String> categories;
-    public Set<String> tags;
-    public Set<String> article_author;
+    public Set<Integer> categories;
+    public Set<Integer> tags;
+    public Set<Integer> article_author;
     public String ennoima;
-    public String source;
+    public Set<Integer> source;
 
     public Article() {
     }
@@ -138,27 +138,27 @@ public class Article {
         this.meta = meta;
     }
 
-    public Set<String> getCategories() {
+    public Set<Integer> getCategories() {
         return this.categories;
     }
 
-    public void setCategories(Set<String> categories) {
+    public void setCategories(Set<Integer> categories) {
         this.categories = categories;
     }
 
-    public Set<String> getTags() {
+    public Set<Integer> getTags() {
         return this.tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(Set<Integer> tags) {
         this.tags = tags;
     }
 
-    public Set<String> getArticle_author() {
+    public Set<Integer> getArticle_author() {
         return this.article_author;
     }
 
-    public void setArticle_author(Set<String> article_author) {
+    public void setArticle_author(Set<Integer> article_author) {
         this.article_author = article_author;
     }
 
@@ -170,11 +170,11 @@ public class Article {
         this.ennoima = ennoima;
     }
 
-    public String getSource() {
+    public Set<Integer> getSource() {
         return this.source;
     }
 
-    public void setSource(String source) {
+    public void setSource(Set<Integer> source) {
         this.source = source;
     }
 }
