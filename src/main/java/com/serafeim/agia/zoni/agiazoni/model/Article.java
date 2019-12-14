@@ -5,12 +5,9 @@ import java.util.Set;
 public class Article {
     public String date;
     public String status;
-    public String type;
-    public String link;
     public String title;
     public String content;
     public String excerpt;
-    public String author;
     public String featured_media;
     public String comment_status;
     public String ping_status;
@@ -19,9 +16,9 @@ public class Article {
     public String meta;
     public Set<Integer> categories;
     public Set<Integer> tags;
-    public Set<Integer> article_author;
+    public Set<Integer> article_authors;
     public String ennoima;
-    public Set<Integer> source;
+    public Set<Integer> sources;
 
     public Article() {
     }
@@ -40,22 +37,6 @@ public class Article {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getType() {
-        return this.type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getLink() {
-        return this.link;
-    }
-
-    public void setLink(String link) {
-        this.link = link;
     }
 
     public String getTitle() {
@@ -80,14 +61,6 @@ public class Article {
 
     public void setExcerpt(String excerpt) {
         this.excerpt = excerpt;
-    }
-
-    public String getAuthor() {
-        return this.author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
     }
 
     public String getFeatured_media() {
@@ -154,12 +127,12 @@ public class Article {
         this.tags = tags;
     }
 
-    public Set<Integer> getArticle_author() {
-        return this.article_author;
+    public Set<Integer> getArticle_authors() {
+        return this.article_authors;
     }
 
-    public void setArticle_author(Set<Integer> article_author) {
-        this.article_author = article_author;
+    public void setArticle_authors(Set<Integer> article_authors) {
+        this.article_authors = article_authors;
     }
 
     public String getEnnoima() {
@@ -170,11 +143,11 @@ public class Article {
         this.ennoima = ennoima;
     }
 
-    public Set<Integer> getSource() {
-        return this.source;
+    public Set<Integer> getSources() {
+        return this.sources;
     }
 
-    public void setSource(Set<Integer> source) {
-        this.source = source;
+    public void setSources(Set<Integer> sources) {
+        this.sources = sources;
     }
 }

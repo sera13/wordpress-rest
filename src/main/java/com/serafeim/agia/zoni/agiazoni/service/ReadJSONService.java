@@ -81,9 +81,12 @@ public class ReadJSONService {
                 Article article = new Article();
 
                 article.setStatus("publish");
-                article.setType("post");
+//                article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
+                article.setDate(jsonNode.path("date").asText());
+                article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("maintext").asText());
+//                article.setAuthor();
 
                 String ennoima = jsonNode.path("idees1").asText() +
                         " " + jsonNode.path("idees2").asText() +
@@ -100,6 +103,13 @@ public class ReadJSONService {
 
 
                 Set<Integer> articleTags = getTaxonomyIdsByName(jsonNode.path("articleTopics").asText(), tags);
+                // There is a case that we have only one tag in the 'topic' (older articles)
+                if (jsonNode.path("topic").asText() != null && !StringUtils.isEmpty(jsonNode.path("topic").asText())) {
+                    Integer tagid = tags.get(jsonNode.path("topic").asText());
+                    if (tagid != null) {
+                        articleTags.add(tagid);
+                    }
+                }
                 Set<Integer> articleCategories = getTaxonomyIdsByName(jsonNode.path("category").asText(), categories);
                 Set<Integer> articleArticleAuthors = getTaxonomyIdsByName(jsonNode.path("articleAuthors").asText(), articleAuthors);
                 Set<Integer> articleSource = getTaxonomyIdsByName(jsonNode.path("source").asText(), articleSources);
@@ -107,8 +117,8 @@ public class ReadJSONService {
 
                 article.setTags(articleTags);
                 article.setCategories(articleCategories);
-                article.setArticle_author(articleArticleAuthors);
-                article.setSource(articleSource);
+                article.setArticle_authors(articleArticleAuthors);
+                article.setSources(articleSource);
 
                 articles.add(article);
             }
