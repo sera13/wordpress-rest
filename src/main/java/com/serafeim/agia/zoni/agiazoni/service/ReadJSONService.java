@@ -21,12 +21,16 @@ public class ReadJSONService {
     public void readJson() throws IOException {
 //        createTaxonomyJsonFiles();
         // TODO put this in another action
-        createArticlesJsonFile();
+       // createArticlesJsonFile();
 
 
     }
 
-    private void createTaxonomyJsonFiles() {
+    public String display(String name){
+        return name;
+    }
+
+    public String createTaxonomyJsonFiles() {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
@@ -63,9 +67,11 @@ public class ReadJSONService {
         createJsonFile(categories, "categories.json");
         createJsonFile(articleAuthors, "articleAuthors.json");
         createJsonFile(articleSources, "articleSources.json");
+
+        return "Article json files are created!!";
     }
 
-    private void createArticlesJsonFile() {
+    public String createArticlesJsonFile() {
         List<Article> articles = new ArrayList();
         Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
         Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
@@ -131,7 +137,7 @@ public class ReadJSONService {
 
         createJsonFile(articles, "articles.json");
 
-
+        return "Articles json file is created!!";
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
