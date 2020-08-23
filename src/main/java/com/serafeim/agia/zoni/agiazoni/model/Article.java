@@ -19,6 +19,7 @@ public class Article {
     public Set<Integer> article_authors;
     public String ennoima;
     public Set<Integer> sources;
+    public String numReadings;
 
     public Article() {
     }
@@ -149,5 +150,13 @@ public class Article {
 
     public void setSources(Set<Integer> sources) {
         this.sources = sources;
+    }
+
+    public String getNumReadings() {
+        return numReadings;
+    }
+
+    public void setNumReadings(String numReadings) {
+        this.numReadings = numReadings;
     }
 }

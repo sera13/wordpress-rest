@@ -19,9 +19,9 @@ public class ReadJSONService {
 
     @PostConstruct
     public void readJson() throws IOException {
-//        createTaxonomyJsonFiles();
+        createTaxonomyJsonFiles();
         // TODO put this in another action
-        createArticlesJsonFile();
+//        createArticlesJsonFile();
 
 
     }
@@ -37,6 +37,7 @@ public class ReadJSONService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
+                //TODO eliminate greek tonous
                 Set<Tag> articleTags = createArticleTags(jsonNode.path("articleTopics").asText());
                 Set<Category> articleCategories = createArticleCategories(jsonNode.path("category").asText());
                 Set<ArticleAuthor> articleArticleAuthors = createArticleAuthors(jsonNode.path("articleAuthors").asText());
@@ -86,6 +87,7 @@ public class ReadJSONService {
                 article.setDate(jsonNode.path("date").asText());
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("maintext").asText());
+                article.setNumReadings(jsonNode.path("numReadings").asText());
 //                article.setAuthor();
 
                 String ennoima = jsonNode.path("idees1").asText() +
@@ -135,7 +137,7 @@ public class ReadJSONService {
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
-        List<String> taxonomiesTextList = Arrays.asList(tags.split("\\s*,\\s*"));
+        String[] taxonomiesTextList = tags.split("\\s*,\\s*");
         Set<Integer> taxonomiesIds = new TreeSet<>();
 
         for (String taxonomy : taxonomiesTextList) {
@@ -181,35 +183,41 @@ public class ReadJSONService {
     }
 
     private Set<ArticleAuthor> createArticleAuthors(String authors) {
-        List<String> articleAuthorsText = Arrays.asList(authors.split("\\s*,\\s*"));
-//        article.setArticle_author(new TreeSet<>(articleAuthorsText));
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
+        if (!authors.equals("null")) {
+            String[] articleAuthorsText = authors.split("\\s*,\\s*");
 
-        for (String articleAuthorName : articleAuthorsText) {
-            articleAuthors.add(new ArticleAuthor(articleAuthorName, articleAuthorName, StringUtils.trimAllWhitespace(articleAuthorName)));
+            for (String articleAuthorName : articleAuthorsText) {
+                String trimArticleAuthorName = StringUtils.trimAllWhitespace(articleAuthorName);
+                articleAuthors.add(new ArticleAuthor(trimArticleAuthorName, trimArticleAuthorName, StringUtils.trimAllWhitespace(trimArticleAuthorName)));
+            }
         }
         return articleAuthors;
     }
 
     private Set<Category> createArticleCategories(String category) {
-        List<String> articleCategories = Arrays.asList(category.split("\\s*,\\s*"));
-//        article.setCategories(new TreeSet<>(articleCategories));
         Set<Category> categories = new TreeSet<>();
+        if (!category.equals("null")) {
+            String[] articleCategories = category.split("\\s*,\\s*");
 
-        for (String categoryName : articleCategories) {
-            //TODO define the parent
-            categories.add(new Category(categoryName, categoryName, StringUtils.trimAllWhitespace(categoryName), 0));
+            for (String categoryName : articleCategories) {
+                String trimCategoryName = StringUtils.trimWhitespace(categoryName);
+                //TODO define the parent
+                categories.add(new Category(trimCategoryName, trimCategoryName, StringUtils.trimAllWhitespace(trimCategoryName), 0));
+            }
         }
         return categories;
     }
 
     private Set<Tag> createArticleTags(String articleTopics) {
-        List<String> tagsText = Arrays.asList(articleTopics.split("\\s*,\\s*"));
-//        article.setTags(new TreeSet<>(tagsText));
         Set<Tag> tags = new TreeSet<>();
+        if (!articleTopics.equals("null")) {
+            String[] tagsText = articleTopics.split("\\s*,\\s*");
 
-        for (String tagName : tagsText) {
-            tags.add(new Tag(tagName, tagName, StringUtils.trimAllWhitespace(tagName)));
+            for (String tagName : tagsText) {
+                String trimTagName = StringUtils.trimWhitespace(tagName);
+                tags.add(new Tag(trimTagName, trimTagName, StringUtils.trimAllWhitespace(trimTagName)));
+            }
         }
         return tags;
     }
