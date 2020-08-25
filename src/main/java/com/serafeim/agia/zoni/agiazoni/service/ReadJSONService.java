@@ -12,45 +12,50 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Service
 public class ReadJSONService {
 
-    @PostConstruct
-    public void readJson() throws IOException {
-        createTaxonomyJsonFiles();
-        // TODO put this in another action
-//        createArticlesJsonFile();
+//    @PostConstruct
+//    public void readJson() throws IOException {
+//        createTaxonomyJsonFiles();
+//        // TODO put this in another action
+////        createArticlesJsonFile();
+//
+//
+//    }
 
-
-    }
-
-    private void createTaxonomyJsonFiles() {
+    public void createTaxonomyJsonFiles() {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
         Set<Source> articleSources = new TreeSet<>();
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
+            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
                 //TODO eliminate greek tonous
                 Set<Tag> articleTags = createArticleTags(jsonNode.path("articleTopics").asText());
                 Set<Category> articleCategories = createArticleCategories(jsonNode.path("category").asText());
-                Set<ArticleAuthor> articleArticleAuthors = createArticleAuthors(jsonNode.path("articleAuthors").asText());
+
+                ArticleAuthor articleArticleAuthor = createArticleAuthor(jsonNode.path("articleAuthors").asText());
 
 
                 String sourceText = jsonNode.path("source").asText();
-                Source articleSource = new Source(sourceText, sourceText, StringUtils.trimAllWhitespace(sourceText));
+                String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(sourceText));
+                String normalizedText = sourceText.replaceAll("[\\\\/]", "");
+                Source articleSource = new Source(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
 
                 System.out.println(jsonNode.path("title").asText());
 
                 tags.addAll(articleTags);
                 categories.addAll(articleCategories);
-                articleAuthors.addAll(articleArticleAuthors);
+                articleAuthors.add(articleArticleAuthor);
                 articleSources.add(articleSource);
             }
 
@@ -66,7 +71,13 @@ public class ReadJSONService {
         createJsonFile(articleSources, "articleSources.json");
     }
 
-    private void createArticlesJsonFile() {
+    private ArticleAuthor createArticleAuthor(String articleAuthors) {
+        String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(articleAuthors));
+        String normalizedText = articleAuthors.replaceAll("[\\\\/]", "");
+        return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
+    }
+
+    public void createArticlesJsonFile() {
         List<Article> articles = new ArrayList();
         Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
         Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
@@ -88,18 +99,20 @@ public class ReadJSONService {
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("maintext").asText());
                 article.setNumReadings(jsonNode.path("numReadings").asText());
+                article.setTemplate("full-width-single-post-az-template.php");
 //                article.setAuthor();
 
-                String ennoima = jsonNode.path("idees1").asText() +
-                        " " + jsonNode.path("idees2").asText() +
-                        " " + jsonNode.path("idees3").asText() +
-                        " " + jsonNode.path("idees4").asText() +
-                        " " + jsonNode.path("idees5").asText() +
-                        " " + jsonNode.path("idees6").asText() +
-                        " " + jsonNode.path("idees7").asText() +
-                        " " + jsonNode.path("idees8").asText() +
-                        " " + jsonNode.path("idees9").asText() +
-                        " " + jsonNode.path("idees10").asText();
+
+                String ennoima = getTextIfEmptyOrNull(jsonNode.path("idees1").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees2").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees3").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees4").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees5").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees6").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees7").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees8").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees9").asText()) +
+                        getTextIfEmptyOrNull(jsonNode.path("idees10").asText());
 
                 article.setEnnoima(ennoima.trim());
 
@@ -134,6 +147,10 @@ public class ReadJSONService {
         createJsonFile(articles, "articles.json");
 
 
+    }
+
+    private String getTextIfEmptyOrNull(String text) {
+        return text.equals("null") || StringUtils.isEmpty(text) ? "" : text + " ";
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
@@ -188,8 +205,8 @@ public class ReadJSONService {
             String[] articleAuthorsText = authors.split("\\s*,\\s*");
 
             for (String articleAuthorName : articleAuthorsText) {
-                String trimArticleAuthorName = StringUtils.trimAllWhitespace(articleAuthorName);
-                articleAuthors.add(new ArticleAuthor(trimArticleAuthorName, trimArticleAuthorName, StringUtils.trimAllWhitespace(trimArticleAuthorName)));
+                String trimArticleAuthorName = StringUtils.trimWhitespace(articleAuthorName);
+                articleAuthors.add(new ArticleAuthor(trimArticleAuthorName, trimArticleAuthorName, deAccent(StringUtils.trimAllWhitespace(trimArticleAuthorName))));
             }
         }
         return articleAuthors;
@@ -203,7 +220,7 @@ public class ReadJSONService {
             for (String categoryName : articleCategories) {
                 String trimCategoryName = StringUtils.trimWhitespace(categoryName);
                 //TODO define the parent
-                categories.add(new Category(trimCategoryName, trimCategoryName, StringUtils.trimAllWhitespace(trimCategoryName), 0));
+                categories.add(new Category(trimCategoryName, trimCategoryName, deAccent(StringUtils.trimAllWhitespace(trimCategoryName)), 0));
             }
         }
         return categories;
@@ -216,9 +233,15 @@ public class ReadJSONService {
 
             for (String tagName : tagsText) {
                 String trimTagName = StringUtils.trimWhitespace(tagName);
-                tags.add(new Tag(trimTagName, trimTagName, StringUtils.trimAllWhitespace(trimTagName)));
+                tags.add(new Tag(trimTagName, trimTagName, deAccent(StringUtils.trimAllWhitespace(trimTagName))));
             }
         }
         return tags;
+    }
+
+    public String deAccent(String str) {
+        String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCOMBINING_DIACRITICAL_MARKS}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 }

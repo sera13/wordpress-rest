@@ -20,6 +20,7 @@ public class Article {
     public String ennoima;
     public Set<Integer> sources;
     public String numReadings;
+    public String template;
 
     public Article() {
     }
@@ -158,5 +159,13 @@ public class Article {
 
     public void setNumReadings(String numReadings) {
         this.numReadings = numReadings;
+    }
+
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 }
