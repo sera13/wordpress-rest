@@ -71,12 +71,6 @@ public class ReadJSONService {
         createJsonFile(articleSources, "articleSources.json");
     }
 
-    private ArticleAuthor createArticleAuthor(String articleAuthors) {
-        String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(articleAuthors));
-        String normalizedText = articleAuthors.replaceAll("[\\\\/]", "");
-        return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
-    }
-
     public void createArticlesJsonFile() {
         List<Article> articles = new ArrayList();
         Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
@@ -86,7 +80,7 @@ public class ReadJSONService {
 
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("sample.json"));
+            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
@@ -126,8 +120,8 @@ public class ReadJSONService {
                     }
                 }
                 Set<Integer> articleCategories = getTaxonomyIdsByName(jsonNode.path("category").asText(), categories);
-                Set<Integer> articleArticleAuthors = getTaxonomyIdsByName(jsonNode.path("articleAuthors").asText(), articleAuthors);
-                Set<Integer> articleSource = getTaxonomyIdsByName(jsonNode.path("source").asText(), articleSources);
+                Set<Integer> articleArticleAuthors = getSingleTaxonomyIdsByName(jsonNode.path("articleAuthors").asText(), articleAuthors);
+                Set<Integer> articleSource = getSingleTaxonomyIdsByName(jsonNode.path("source").asText(), articleSources);
 
 
                 article.setTags(articleTags);
@@ -144,9 +138,159 @@ public class ReadJSONService {
             e.printStackTrace();
         }
 
-        createJsonFile(articles, "articles.json");
+        createJsonFile(articles, "articlesProduction.json");
 
 
+    }
+
+    public Set<Source> createSourcesEpikaitotita() {
+        Set<Source> epikairotitaSources = new TreeSet<>();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("epikairotita.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                //TODO eliminate greek tonous
+
+                String sourceText = jsonNode.path("source").asText();
+                String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(sourceText));
+                String normalizedText = sourceText.replaceAll("[\\\\/]", "");
+                Source articleSource = new Source(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
+
+                System.out.println(jsonNode.path("title").asText());
+
+                epikairotitaSources.add(articleSource);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(epikairotitaSources, "epikairotitaSources.json");
+
+        return epikairotitaSources;
+    }
+
+    public List<Article> createEpikaitotitaPosts() {
+
+        List<Article> articles = new ArrayList();
+        Map<String, Integer> epikairotitaSources = createTaxonomyMap("wordpress_sources.json");
+        Map<String, Integer> epikairotitaMedia = createTaxonomyMapMedia("wordpress_media.json");
+
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("epikairotita.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Article article = new Article();
+
+                article.setStatus("publish");
+//                article.setType("post");
+                article.setTitle(jsonNode.path("title").asText());
+                article.setDate(jsonNode.path("date").asText());
+                article.setExcerpt(jsonNode.path("introtext").asText());
+                article.setContent(jsonNode.path("text").asText());
+//                article.setNumReadings(jsonNode.path("numReadings").asText());
+//                article.setTemplate("full-width-single-post-az-template.php");
+//                article.setAuthor();
+
+
+                Set<Integer> articleSource = getSingleTaxonomyIdsByName(jsonNode.path("source").asText(), epikairotitaSources);
+
+
+                article.setSources(articleSource);
+
+                Integer imageId = getSingleMediaIdsByName(jsonNode.path("img").asText(), epikairotitaMedia);
+
+                article.setFeatured_media(imageId);
+
+                article.setCategories(Set.of(9625));
+
+                articles.add(article);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(articles, "epikairotitaProduction.json");
+        return articles;
+    }
+
+    public List<Article> createParemvaseisPosts() {
+
+        List<Article> articles = new ArrayList();
+        Map<String, Integer> paremvaseisMedia = createTaxonomyMapMedia("wordpress_media.json");
+
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("paremvaseis.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Article article = new Article();
+
+                article.setStatus("publish");
+                article.setTitle(jsonNode.path("title").asText());
+                article.setDate(jsonNode.path("date").asText());
+                article.setContent(jsonNode.path("text").asText());
+
+
+                Integer imageId = getSingleMediaIdsByName(jsonNode.path("img").asText(), paremvaseisMedia);
+
+                article.setFeatured_media(imageId);
+
+                article.setCategories(Set.of(9626));
+
+                articles.add(article);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(articles, "paremvaseisProduction.json");
+        return articles;
+    }
+
+    private Set<Integer> getSingleTaxonomyIdsByName(String tag, Map<String, Integer> taxonomiesMap) {
+        Set<Integer> taxonomiesIds = new TreeSet<>();
+
+        String taxonomy = removeAccentsAndSpecialChars(tag);
+
+        Integer tagid = taxonomiesMap.get(taxonomy);
+        if (tagid != null) {
+            taxonomiesIds.add(tagid);
+        }
+        return taxonomiesIds;
+    }
+
+    private Integer getSingleMediaIdsByName(String media, Map<String, Integer> mediaMap) {
+        for (String s : mediaMap.keySet()) {
+            if (s.contains(media)){
+                return mediaMap.get(s);
+            }
+        }
+        return null;
+    }
+
+    private String removeAccentsAndSpecialChars(String tag) {
+        String normalizedTextTag = deAccent(StringUtils.trimAllWhitespace(tag));
+        return normalizedTextTag.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", "");
+    }
+
+    private ArticleAuthor createArticleAuthor(String articleAuthors) {
+        String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(articleAuthors));
+        String normalizedText = articleAuthors.replaceAll("[\\\\/]", "");
+        return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
     }
 
     private String getTextIfEmptyOrNull(String text) {
@@ -158,7 +302,8 @@ public class ReadJSONService {
         Set<Integer> taxonomiesIds = new TreeSet<>();
 
         for (String taxonomy : taxonomiesTextList) {
-            Integer tagid = taxonomiesMap.get(taxonomy);
+            String normalizeTaxonomy = removeAccentsAndSpecialChars(taxonomy);
+            Integer tagid = taxonomiesMap.get(normalizeTaxonomy);
             if (tagid != null) {
                 taxonomiesIds.add(tagid);
             }
@@ -167,7 +312,7 @@ public class ReadJSONService {
     }
 
     private Map<String, Integer> createTaxonomyMap(String filename) {
-        Map<String, Integer> result = new HashMap<String, Integer>();
+        Map<String, Integer> result = new HashMap();
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get(filename));
@@ -175,7 +320,7 @@ public class ReadJSONService {
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
                 Integer id = jsonNode.path("id").asInt();
-                String name = jsonNode.path("name").asText();
+                String name = removeAccentsAndSpecialChars(jsonNode.path("name").asText());
                 result.put(name, id);
             }
 
@@ -187,7 +332,29 @@ public class ReadJSONService {
         return result;
     }
 
-    private void createJsonFile(Collection contents, String filename) {
+    private Map<String, Integer> createTaxonomyMapMedia(String filename) {
+        Map<String, Integer> result = new HashMap();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(filename));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Integer id = jsonNode.path("id").asInt();
+                String source_url = jsonNode.path("source_url").asText();
+                result.put(source_url, id);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+    public void createJsonFile(Collection contents, String filename) {
         try {
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(filename));
             ObjectMapper mapper = new ObjectMapper();

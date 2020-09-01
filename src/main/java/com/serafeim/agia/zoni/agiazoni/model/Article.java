@@ -1,25 +1,48 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
-public class Article {
+
+public class Article implements Serializable {
+    @JsonProperty
     public String date;
+    @JsonProperty
     public String status;
+    @JsonProperty("title")
     public String title;
+    @JsonProperty
     public String content;
+    @JsonProperty
     public String excerpt;
-    public String featured_media;
+    @JsonProperty
+    public Integer featured_media;
+    @JsonProperty
     public String comment_status;
+    @JsonProperty
     public String ping_status;
+    @JsonProperty
     public String sticky;
+    @JsonProperty
     public String format;
+    @JsonProperty
     public String meta;
-    public Set<Integer> categories;
-    public Set<Integer> tags;
-    public Set<Integer> article_authors;
+    @JsonProperty
+    public Set<Integer> categories = new HashSet<>();
+    @JsonProperty
+    public Set<Integer> tags = new HashSet<>();
+    @JsonProperty
+    public Set<Integer> article_authors = new HashSet<>();
+    @JsonProperty
     public String ennoima;
-    public Set<Integer> sources;
+    @JsonProperty
+    public Set<Integer> sources = new HashSet<>();
+    @JsonProperty
     public String numReadings;
+    @JsonProperty
     public String template;
 
     public Article() {
@@ -65,11 +88,11 @@ public class Article {
         this.excerpt = excerpt;
     }
 
-    public String getFeatured_media() {
+    public Integer getFeatured_media() {
         return this.featured_media;
     }
 
-    public void setFeatured_media(String featured_media) {
+    public void setFeatured_media(Integer featured_media) {
         this.featured_media = featured_media;
     }
 
