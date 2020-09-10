@@ -1,49 +1,31 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 
 public class Article implements Serializable {
-    @JsonProperty
+
     public String date;
-    @JsonProperty
     public String status;
-    @JsonProperty("title")
     public String title;
-    @JsonProperty
     public String content;
-    @JsonProperty
     public String excerpt;
-    @JsonProperty
     public Integer featured_media;
-    @JsonProperty
     public String comment_status;
-    @JsonProperty
     public String ping_status;
-    @JsonProperty
     public String sticky;
-    @JsonProperty
     public String format;
-    @JsonProperty
     public String meta;
-    @JsonProperty
     public Set<Integer> categories = new HashSet<>();
-    @JsonProperty
     public Set<Integer> tags = new HashSet<>();
-    @JsonProperty
-    public Set<Integer> article_authors = new HashSet<>();
-    @JsonProperty
-    public String ennoima;
-    @JsonProperty
-    public Set<Integer> sources = new HashSet<>();
-    @JsonProperty
-    public String numReadings;
-    @JsonProperty
     public String template;
+    // those 4 fields are for the posts
+    public String ennoima;
+    public Set<Integer> article_authors = new HashSet<>();
+    public Set<Integer> sources = new HashSet<>();
+    public String numReadings;
 
     public Article() {
     }

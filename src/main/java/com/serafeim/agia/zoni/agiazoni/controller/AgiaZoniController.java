@@ -1,10 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.serafeim.agia.zoni.agiazoni.model.Article;
-import com.serafeim.agia.zoni.agiazoni.model.Media;
-import com.serafeim.agia.zoni.agiazoni.model.Post;
-import com.serafeim.agia.zoni.agiazoni.model.Source;
+import com.serafeim.agia.zoni.agiazoni.model.*;
 import com.serafeim.agia.zoni.agiazoni.service.ReadJSONService;
 import com.serafeim.agia.zoni.agiazoni.service.RestClientService;
 import com.serafeim.agia.zoni.agiazoni.service.RetreiveWordpressInfoService;
@@ -40,7 +37,7 @@ public class AgiaZoniController {
     }
 
     @GetMapping("/getAllPosts")
-    public String getAllPosts(@RequestParam String type) {
+    public String getAllPosts(@RequestParam String type) throws Exception {
         List<Post> posts = retreiveWordpressInfoService.getAllPosts(type);
         readJSONService.createJsonFile(posts, "wordpress_" + type + ".json");
         return "getAllPosts called " + posts.size();
@@ -75,6 +72,26 @@ public class AgiaZoniController {
         List<Article> articles = restClientService.createArticlesFromJsonFile(filename);
         restClientService.createArticles(articles);
         return "createArticlesFromJsonFile called " + articles.size();
+    }
+
+    @GetMapping("/createEdafiaPosts")
+    public String createEdafiaPosts() {
+        List<Edafio> edafiaPosts = readJSONService.createEdafiaPosts();
+        return "createEdafiaPosts called " + edafiaPosts.size();
+    }
+
+    @GetMapping("/createEdafiaFromJsonFile")
+    public String createEdafiaFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
+        List<Edafio> edafiaFromJsonFile = restClientService.createEdafiaFromJsonFile(filename);
+        restClientService.createEdafia(edafiaFromJsonFile);
+        return "createEdafiaFromJsonFile called " + edafiaFromJsonFile.size();
+    }
+
+    @GetMapping("/updatePosts")
+    public String updatePosts(@RequestParam String filename) throws JsonProcessingException {
+        List<Post> postsFromJsonFile = restClientService.createPostsFromJsonFile(filename);
+        restClientService.updatePost(postsFromJsonFile);
+        return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 
 

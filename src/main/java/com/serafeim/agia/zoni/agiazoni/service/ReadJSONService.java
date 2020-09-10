@@ -6,9 +6,7 @@ import com.serafeim.agia.zoni.agiazoni.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,15 +16,6 @@ import java.util.regex.Pattern;
 
 @Service
 public class ReadJSONService {
-
-//    @PostConstruct
-//    public void readJson() throws IOException {
-//        createTaxonomyJsonFiles();
-//        // TODO put this in another action
-////        createArticlesJsonFile();
-//
-//
-//    }
 
     public void createTaxonomyJsonFiles() {
         Set<Tag> tags = new TreeSet<>();
@@ -259,6 +248,42 @@ public class ReadJSONService {
 
         createJsonFile(articles, "paremvaseisProduction.json");
         return articles;
+    }
+
+    public List<Edafio> createEdafiaPosts() {
+        List<Edafio> edafiaList = new ArrayList();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("ag_content.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Edafio edafio = new Edafio();
+
+                edafio.setStatus("private");
+                edafio.setTitle(jsonNode.path("contentID").asText());
+                edafio.setContentid(jsonNode.path("contentID").asText());
+                edafio.setBookid(jsonNode.path("bookID").asText());
+                edafio.setBook(jsonNode.path("book").asText());
+                edafio.setArxaio(jsonNode.path("arxaio").asText());
+                edafio.setMetafrasi(jsonNode.path("metafrasi").asText());
+                edafio.setKef(jsonNode.path("kef").asText());
+                edafio.setEdafio(jsonNode.path("edafio").asText());
+                edafio.setPart(jsonNode.path("part").asText());
+                edafio.setAgbookname(jsonNode.path("ag_bookname").asText());
+                edafio.setAgcategory(jsonNode.path("cat").asText());
+
+                edafiaList.add(edafio);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(edafiaList, "edaiaProduction.json");
+        return edafiaList;
     }
 
     private Set<Integer> getSingleTaxonomyIdsByName(String tag, Map<String, Integer> taxonomiesMap) {
