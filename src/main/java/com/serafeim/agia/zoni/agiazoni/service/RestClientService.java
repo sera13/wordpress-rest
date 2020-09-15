@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class RestClientService {
@@ -61,6 +62,7 @@ public class RestClientService {
         return Arrays.asList(edafia);
     }
 
+    //TODO this can be of type Post
     public void createEdafia(List<Edafio> edafia) {
         HttpHeaders headers = getHttpHeaders();
 
@@ -169,19 +171,46 @@ public class RestClientService {
             ObjectMapper objectMapper = new ObjectMapper();
             HttpEntity request = new HttpEntity("{\"status\":\"publish\"}", headers);
 
-            String articleResultAsJsonStr =
-                    restTemplate.postForObject(url + post.getId(), request, String.class);
-            JsonNode root;
-            try {
-                root = objectMapper.readTree(articleResultAsJsonStr);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                logger.error("Post not updated: " + e.getMessage());
-                continue;
-            }
+//            String articleResultAsJsonStr =
+//                    restTemplate.postForObject(url + post.getId(), request, String.class);
+//            JsonNode root;
+//            try {
+//                root = objectMapper.readTree(articleResultAsJsonStr);
+//            } catch (JsonProcessingException e) {
+//                e.printStackTrace();
+//                logger.error("Post not updated: " + e.getMessage());
+//                continue;
+//            }
+//            logger.debug("Post updated: " + root);
 
-            logger.debug("Post updated: " + root);
         }
     }
 
+    public void createPost(List<Post> posts, String url) {
+        HttpHeaders headers = getHttpHeaders();
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters()
+                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+        for (Post post : posts) {
+            try {
+                post.setCategories(Set.of(9629));
+                post.setStatus("publish");
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                HttpEntity request = new HttpEntity(objectMapper.writeValueAsString(post), headers);
+
+                String jsonNode =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root;
+                root = objectMapper.readTree(jsonNode);
+                logger.debug("Post updated: " + root);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                logger.error("Post not updated: " + e.getMessage());
+            }
+
+        }
+    }
 }

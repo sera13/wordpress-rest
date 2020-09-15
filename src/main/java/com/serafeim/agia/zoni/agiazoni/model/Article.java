@@ -1,10 +1,12 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Article implements Serializable {
 
     public String date;

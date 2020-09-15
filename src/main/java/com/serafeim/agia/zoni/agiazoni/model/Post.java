@@ -1,20 +1,19 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Post {
-    public Integer id;
     public String status;
     public String introtext;
     public String date;
     public String text;
+    public Set<Integer> categories = new HashSet<>();
 
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getStatus() {
         return status;
@@ -46,5 +45,13 @@ public class Post {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public Set<Integer> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Integer> categories) {
+        this.categories = categories;
     }
 }

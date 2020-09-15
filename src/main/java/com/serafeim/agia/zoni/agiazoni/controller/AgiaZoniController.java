@@ -16,6 +16,7 @@ import java.util.Set;
 @RestController
 public class AgiaZoniController {
 
+    public static final String HTTP_LOCALHOST_8081_WP_JSON_WP_V_2 = "http://localhost:8081/wp-json/wp/v2/";
     @Autowired
     public ReadJSONService readJSONService;
     @Autowired
@@ -94,5 +95,17 @@ public class AgiaZoniController {
         return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 
+    @GetMapping("/createSynaxaristis")
+    public String createSynaxaristis() throws JsonProcessingException {
+       List<Article> articles =  readJSONService.createSynaxaristisPosts();
+        return "createSynaxaristis called " + articles.size();
+    }
+
+    @GetMapping("/createSynaxaristisFromJsonFile")
+    public String createSynaxaristisFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
+        List<Article> postsFromJsonFile = restClientService.createArticlesFromJsonFile(filename);
+        restClientService.createArticles(postsFromJsonFile);
+        return "postsFromJsonFile called " + postsFromJsonFile.size();
+    }
 
 }

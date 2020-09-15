@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.Normalizer;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -284,6 +285,47 @@ public class ReadJSONService {
 
         createJsonFile(edafiaList, "edaiaProduction.json");
         return edafiaList;
+    }
+
+    public List<Article> createSynaxaristisPosts() {
+
+        List<Article> articles = new ArrayList();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("synaxaristis.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                Article article = new Article();
+
+                article.setStatus("publish");
+                article.setTitle(jsonNode.path("introtext").asText());
+                String dateString = jsonNode.path("date").asText();
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+
+
+                String date = formatter2.format(formatter.parse(dateString));
+                Calendar c = Calendar.getInstance();
+                c.setTime(formatter.parse(date));
+                c.add(Calendar.YEAR, 1);
+//                sdf.format(c.getTime());
+                article.setDate(formatter2.format(c.getTime()));
+                article.setContent(jsonNode.path("text").asText());
+                article.setCategories(Set.of(9629));
+                article.setComment_status("closed");
+
+                articles.add(article);
+            }
+
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(articles, "synaxaristisProduction.json");
+        return articles;
     }
 
     private Set<Integer> getSingleTaxonomyIdsByName(String tag, Map<String, Integer> taxonomiesMap) {
