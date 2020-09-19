@@ -1,24 +1,36 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
-public class Article {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+public class Article implements Serializable {
+
     public String date;
     public String status;
     public String title;
     public String content;
     public String excerpt;
-    public String featured_media;
-    public String comment_status;
-    public String ping_status;
+    public Integer featuredMedia;
+    public String commentStatus;
+    public String pingStatus;
     public String sticky;
     public String format;
     public String meta;
-    public Set<Integer> categories;
-    public Set<Integer> tags;
-    public Set<Integer> article_authors;
+    public Set<Integer> categories = new HashSet<>();
+    public Set<Integer> tags = new HashSet<>();
+    public String template;
+    // those 4 fields are for the posts
     public String ennoima;
-    public Set<Integer> sources;
+    public Set<Integer> articleAuthors = new HashSet<>();
+    public Set<Integer> sources = new HashSet<>();
+    public String numReadings;
 
     public Article() {
     }
@@ -63,28 +75,28 @@ public class Article {
         this.excerpt = excerpt;
     }
 
-    public String getFeatured_media() {
-        return this.featured_media;
+    public Integer getFeaturedMedia() {
+        return this.featuredMedia;
     }
 
-    public void setFeatured_media(String featured_media) {
-        this.featured_media = featured_media;
+    public void setFeaturedMedia(Integer featuredMedia) {
+        this.featuredMedia = featuredMedia;
     }
 
-    public String getComment_status() {
-        return this.comment_status;
+    public String getCommentStatus() {
+        return this.commentStatus;
     }
 
-    public void setComment_status(String comment_status) {
-        this.comment_status = comment_status;
+    public void setCommentStatus(String commentStatus) {
+        this.commentStatus = commentStatus;
     }
 
-    public String getPing_status() {
-        return this.ping_status;
+    public String getPingStatus() {
+        return this.pingStatus;
     }
 
-    public void setPing_status(String ping_status) {
-        this.ping_status = ping_status;
+    public void setPingStatus(String pingStatus) {
+        this.pingStatus = pingStatus;
     }
 
     public String getSticky() {
@@ -127,12 +139,12 @@ public class Article {
         this.tags = tags;
     }
 
-    public Set<Integer> getArticle_authors() {
-        return this.article_authors;
+    public Set<Integer> getArticleAuthors() {
+        return this.articleAuthors;
     }
 
-    public void setArticle_authors(Set<Integer> article_authors) {
-        this.article_authors = article_authors;
+    public void setArticleAuthors(Set<Integer> articleAuthors) {
+        this.articleAuthors = articleAuthors;
     }
 
     public String getEnnoima() {
@@ -149,5 +161,21 @@ public class Article {
 
     public void setSources(Set<Integer> sources) {
         this.sources = sources;
+    }
+
+    public String getNumReadings() {
+        return numReadings;
+    }
+
+    public void setNumReadings(String numReadings) {
+        this.numReadings = numReadings;
+    }
+
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 }

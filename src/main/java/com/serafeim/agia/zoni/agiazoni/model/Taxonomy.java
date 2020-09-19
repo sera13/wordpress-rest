@@ -47,6 +47,11 @@ public class Taxonomy implements Comparable<Taxonomy> {
 
     @Override
     public int compareTo(Taxonomy taxonomy) {
-        return this.name.compareTo(taxonomy.getName());
+        return this.slug.compareTo(taxonomy.getSlug());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[description: %s name: %s slug: %s]", this.description, this.name, this.slug);
     }
 }
