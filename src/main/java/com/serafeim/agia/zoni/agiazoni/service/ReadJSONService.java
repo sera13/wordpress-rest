@@ -3,8 +3,8 @@ package com.serafeim.agia.zoni.agiazoni.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.BufferedWriter;
 import java.io.Reader;
@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
@@ -37,7 +38,7 @@ public class ReadJSONService {
 
 
                 String sourceText = jsonNode.path("source").asText();
-                String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(sourceText));
+                String normalizedTextSlug = deAccent(StringUtils.deleteWhitespace(sourceText));
                 String normalizedText = sourceText.replaceAll("[\\\\/]", "");
                 Source articleSource = new Source(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
 
@@ -116,7 +117,7 @@ public class ReadJSONService {
 
                 article.setTags(articleTags);
                 article.setCategories(articleCategories);
-                article.setArticle_authors(articleArticleAuthors);
+                article.setArticleAuthors(articleArticleAuthors);
                 article.setSources(articleSource);
 
                 articles.add(article);
@@ -144,7 +145,7 @@ public class ReadJSONService {
                 //TODO eliminate greek tonous
 
                 String sourceText = jsonNode.path("source").asText();
-                String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(sourceText));
+                String normalizedTextSlug = deAccent(StringUtils.deleteWhitespace(sourceText));
                 String normalizedText = sourceText.replaceAll("[\\\\/]", "");
                 Source articleSource = new Source(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
 
@@ -196,7 +197,7 @@ public class ReadJSONService {
 
                 Integer imageId = getSingleMediaIdsByName(jsonNode.path("img").asText(), epikairotitaMedia);
 
-                article.setFeatured_media(imageId);
+                article.setFeaturedMedia(imageId);
 
                 article.setCategories(Set.of(9625));
 
@@ -234,7 +235,7 @@ public class ReadJSONService {
 
                 Integer imageId = getSingleMediaIdsByName(jsonNode.path("img").asText(), paremvaseisMedia);
 
-                article.setFeatured_media(imageId);
+                article.setFeaturedMedia(imageId);
 
                 article.setCategories(Set.of(9626));
 
@@ -313,7 +314,7 @@ public class ReadJSONService {
                 article.setDate(formatter2.format(c.getTime()));
                 article.setContent(jsonNode.path("text").asText());
                 article.setCategories(Set.of(9629));
-                article.setComment_status("closed");
+                article.setCommentStatus("closed");
 
                 articles.add(article);
             }
@@ -326,6 +327,62 @@ public class ReadJSONService {
 
         createJsonFile(articles, "synaxaristisProduction.json");
         return articles;
+    }
+
+    public List<Video> createVideoJsonFile() {
+
+        List<Video> videoList = new ArrayList();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get("videos.json"));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                String extractUrl = extractYoutubeUrl(jsonNode.path("src").asText());
+                if (!StringUtils.isEmpty(extractUrl)) {
+                    Video video = new Video();
+
+//                    video.setStatus("publish");
+//                    video.setTitle(jsonNode.path("title").asText());
+//                    video.setDate(jsonNode.path("date_published").asText());
+                    video.setEditor(jsonNode.path("txt").asText());
+                    video.setVideoLink(extractUrl);
+                    video.setImagePreview(jsonNode.path("img").asText());
+//                    video.setNumReadings(jsonNode.path("num_hits").asText());
+//                    video.setCommentStatus("closed");
+                    video.setDuration(jsonNode.path("duration").asText());
+
+                    videoList.add(video);
+                }
+            }
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(videoList, "videoProduction.json");
+
+        return videoList;
+    }
+
+    private String extractYoutubeUrl(String src) {
+        String url = null;
+
+        if (StringUtils.contains(src, "youtube")) {  //TODO keep this just to test not youtube videos
+            return null;
+        }
+        if (StringUtils.startsWithIgnoreCase(src,"<iframe")){
+
+            // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
+            Matcher matcher = Pattern.compile("src=\\\\\"([^\"]+)\"").matcher(src);
+            boolean found = matcher.find();
+            if (found) {
+                url = matcher.group(1);
+            }
+        }
+
+        return url;
     }
 
     private Set<Integer> getSingleTaxonomyIdsByName(String tag, Map<String, Integer> taxonomiesMap) {
@@ -342,7 +399,7 @@ public class ReadJSONService {
 
     private Integer getSingleMediaIdsByName(String media, Map<String, Integer> mediaMap) {
         for (String s : mediaMap.keySet()) {
-            if (s.contains(media)){
+            if (s.contains(media)) {
                 return mediaMap.get(s);
             }
         }
@@ -350,12 +407,12 @@ public class ReadJSONService {
     }
 
     private String removeAccentsAndSpecialChars(String tag) {
-        String normalizedTextTag = deAccent(StringUtils.trimAllWhitespace(tag));
+        String normalizedTextTag = deAccent(StringUtils.deleteWhitespace(tag));
         return normalizedTextTag.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", "");
     }
 
     private ArticleAuthor createArticleAuthor(String articleAuthors) {
-        String normalizedTextSlug = deAccent(StringUtils.trimAllWhitespace(articleAuthors));
+        String normalizedTextSlug = deAccent(StringUtils.deleteWhitespace(articleAuthors));
         String normalizedText = articleAuthors.replaceAll("[\\\\/]", "");
         return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
     }
@@ -439,8 +496,8 @@ public class ReadJSONService {
             String[] articleAuthorsText = authors.split("\\s*,\\s*");
 
             for (String articleAuthorName : articleAuthorsText) {
-                String trimArticleAuthorName = StringUtils.trimWhitespace(articleAuthorName);
-                articleAuthors.add(new ArticleAuthor(trimArticleAuthorName, trimArticleAuthorName, deAccent(StringUtils.trimAllWhitespace(trimArticleAuthorName))));
+                String trimArticleAuthorName = StringUtils.trim(articleAuthorName);
+                articleAuthors.add(new ArticleAuthor(trimArticleAuthorName, trimArticleAuthorName, deAccent(StringUtils.deleteWhitespace(trimArticleAuthorName))));
             }
         }
         return articleAuthors;
@@ -452,9 +509,9 @@ public class ReadJSONService {
             String[] articleCategories = category.split("\\s*,\\s*");
 
             for (String categoryName : articleCategories) {
-                String trimCategoryName = StringUtils.trimWhitespace(categoryName);
+                String trimCategoryName = StringUtils.trim(categoryName);
                 //TODO define the parent
-                categories.add(new Category(trimCategoryName, trimCategoryName, deAccent(StringUtils.trimAllWhitespace(trimCategoryName)), 0));
+                categories.add(new Category(trimCategoryName, trimCategoryName, deAccent(StringUtils.deleteWhitespace(trimCategoryName)), 0));
             }
         }
         return categories;
@@ -466,8 +523,8 @@ public class ReadJSONService {
             String[] tagsText = articleTopics.split("\\s*,\\s*");
 
             for (String tagName : tagsText) {
-                String trimTagName = StringUtils.trimWhitespace(tagName);
-                tags.add(new Tag(trimTagName, trimTagName, deAccent(StringUtils.trimAllWhitespace(trimTagName))));
+                String trimTagName = StringUtils.trim(tagName);
+                tags.add(new Tag(trimTagName, trimTagName, deAccent(StringUtils.deleteWhitespace(trimTagName))));
             }
         }
         return tags;
@@ -479,3 +536,5 @@ public class ReadJSONService {
         return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 }
+
+

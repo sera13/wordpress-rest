@@ -108,4 +108,17 @@ public class AgiaZoniController {
         return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 
+    @GetMapping("/createVideoJsonFile")
+    public String createVideoJsonFile() throws JsonProcessingException {
+        List<Video> videoJsonFile =  readJSONService.createVideoJsonFile();
+        return "createVideoJsonFile called " + videoJsonFile.size();
+    }
+
+//    @GetMapping("/createVideoFromJsonFile")
+//    public String createVideoFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
+//        List<Article> postsFromJsonFile = restClientService.createVideoFromJsonFile(filename);
+//        restClientService.createArticles(postsFromJsonFile);
+//        return "postsFromJsonFile called " + postsFromJsonFile.size();
+//    }
+
 }
