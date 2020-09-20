@@ -17,6 +17,7 @@ import java.util.Set;
 public class AgiaZoniController {
 
     public static final String HTTP_LOCALHOST_8081_WP_JSON_WP_V_2 = "http://localhost:8081/wp-json/wp/v2/";
+    public static final String HTTP_VIDEOS = "http://localhost:8081/wp-json/wp/v2/video_posts";
     @Autowired
     public ReadJSONService readJSONService;
     @Autowired
@@ -26,21 +27,21 @@ public class AgiaZoniController {
 
 
     @GetMapping("/createTaxonomyJsonFiles")
-    public String createTaxonomyJsonFiles() {
-        readJSONService.createTaxonomyJsonFiles();
+    public String createTaxonomyJsonFiles(@RequestParam String fromFile, @RequestParam String toFile) {
+        readJSONService.createTaxonomyJsonFiles(fromFile);
         return "createTaxonomyJsonFiles called";
     }
 
     @GetMapping("/createArticlesJsonFile")
-    public String createArticlesJsonFile() {
-        readJSONService.createArticlesJsonFile();
+    public String createArticlesJsonFile(@RequestParam String fromFile, @RequestParam String toFile) {
+        readJSONService.createArticlesJsonFile(fromFile, toFile);
         return "createArticlesJsonFile called";
     }
 
     @GetMapping("/getAllPosts")
-    public String getAllPosts(@RequestParam String type) throws Exception {
-        List<Post> posts = retreiveWordpressInfoService.getAllPosts(type);
-        readJSONService.createJsonFile(posts, "wordpress_" + type + ".json");
+    public String getAllPosts(@RequestParam String postType) throws Exception {
+        List<Post> posts = retreiveWordpressInfoService.getAllPosts(postType);
+        readJSONService.createJsonFile(posts, "wordpress_" + postType + ".json");
         return "getAllPosts called " + posts.size();
     }
 
@@ -68,6 +69,7 @@ public class AgiaZoniController {
         List<Article> posts = readJSONService.createParemvaseisPosts();
         return "createParemvaseisPosts called " + posts.size();
     }
+
     @GetMapping("/createArticlesFromJsonFile")
     public String createArticlesFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
         List<Article> articles = restClientService.createArticlesFromJsonFile(filename);
@@ -97,7 +99,7 @@ public class AgiaZoniController {
 
     @GetMapping("/createSynaxaristis")
     public String createSynaxaristis() throws JsonProcessingException {
-       List<Article> articles =  readJSONService.createSynaxaristisPosts();
+        List<Article> articles = readJSONService.createSynaxaristisPosts();
         return "createSynaxaristis called " + articles.size();
     }
 
@@ -109,16 +111,16 @@ public class AgiaZoniController {
     }
 
     @GetMapping("/createVideoJsonFile")
-    public String createVideoJsonFile() throws JsonProcessingException {
-        List<Video> videoJsonFile =  readJSONService.createVideoJsonFile();
+    public String createVideoJsonFile(@RequestParam String fromFile, @RequestParam String toFile) throws JsonProcessingException {
+        List<Video> videoJsonFile = readJSONService.createVideoJsonFile(fromFile, toFile);
         return "createVideoJsonFile called " + videoJsonFile.size();
     }
 
-//    @GetMapping("/createVideoFromJsonFile")
-//    public String createVideoFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
-//        List<Article> postsFromJsonFile = restClientService.createVideoFromJsonFile(filename);
-//        restClientService.createArticles(postsFromJsonFile);
-//        return "postsFromJsonFile called " + postsFromJsonFile.size();
-//    }
+    @GetMapping("/createVideoFromJsonFile")
+    public String createVideoFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
+        List<Video> videos = restClientService.getPostsAccordingToTypeFromJsonFile(filename, Video.class);
+        restClientService.createPostsToWordpressAccordingPostType(videos, HTTP_VIDEOS);
+        return "create videos called " + videos.size();
+    }
 
 }

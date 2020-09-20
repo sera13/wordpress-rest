@@ -19,14 +19,17 @@ import java.util.regex.Pattern;
 @Service
 public class ReadJSONService {
 
-    public void createTaxonomyJsonFiles() {
+    public static final String YOUTUBE_COM_EMBED_OLD = "www.youtube.com/embed";
+    public static final String YOUTUBE_COM_EMBED_NEW = "youtu.be";
+
+    public void createTaxonomyJsonFiles(String filename) {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
         Set<Source> articleSources = new TreeSet<>();
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(filename));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
@@ -62,7 +65,7 @@ public class ReadJSONService {
         createJsonFile(articleSources, "articleSources.json");
     }
 
-    public void createArticlesJsonFile() {
+    public void createArticlesJsonFile(String fromFile, String toFile) {
         List<Article> articles = new ArrayList();
         Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
         Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
@@ -71,21 +74,19 @@ public class ReadJSONService {
 
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
                 Article article = new Article();
 
                 article.setStatus("publish");
-//                article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setDate(jsonNode.path("date").asText());
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("maintext").asText());
                 article.setNumReadings(jsonNode.path("numReadings").asText());
                 article.setTemplate("full-width-single-post-az-template.php");
-//                article.setAuthor();
 
 
                 String ennoima = getTextIfEmptyOrNull(jsonNode.path("idees1").asText()) +
@@ -129,7 +130,7 @@ public class ReadJSONService {
             e.printStackTrace();
         }
 
-        createJsonFile(articles, "articlesProduction.json");
+        createJsonFile(articles, toFile);
 
 
     }
@@ -153,7 +154,6 @@ public class ReadJSONService {
 
                 epikairotitaSources.add(articleSource);
             }
-
 
             reader.close();
         } catch (Exception e) {
@@ -180,14 +180,10 @@ public class ReadJSONService {
                 Article article = new Article();
 
                 article.setStatus("publish");
-//                article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setDate(jsonNode.path("date").asText());
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("text").asText());
-//                article.setNumReadings(jsonNode.path("numReadings").asText());
-//                article.setTemplate("full-width-single-post-az-template.php");
-//                article.setAuthor();
 
 
                 Set<Integer> articleSource = getSingleTaxonomyIdsByName(jsonNode.path("source").asText(), epikairotitaSources);
@@ -218,7 +214,6 @@ public class ReadJSONService {
 
         List<Article> articles = new ArrayList();
         Map<String, Integer> paremvaseisMedia = createTaxonomyMapMedia("wordpress_media.json");
-
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("paremvaseis.json"));
@@ -329,7 +324,7 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Video> createVideoJsonFile() {
+    public List<Video> createVideoJsonFile(String fromFile, String toFile) {
 
         List<Video> videoList = new ArrayList();
 
@@ -338,18 +333,18 @@ public class ReadJSONService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                String extractUrl = extractYoutubeUrl(jsonNode.path("src").asText());
+                String extractUrl = extractEmbedVideoUrl(jsonNode.path("src").asText());
                 if (!StringUtils.isEmpty(extractUrl)) {
                     Video video = new Video();
 
-//                    video.setStatus("publish");
-//                    video.setTitle(jsonNode.path("title").asText());
-//                    video.setDate(jsonNode.path("date_published").asText());
+                    video.setStatus("publish");
+                    video.setTitle(jsonNode.path("title").asText());
+                    video.setDate(jsonNode.path("date_published").asText());
                     video.setEditor(jsonNode.path("txt").asText());
                     video.setVideoLink(extractUrl);
                     video.setImagePreview(jsonNode.path("img").asText());
-//                    video.setNumReadings(jsonNode.path("num_hits").asText());
-//                    video.setCommentStatus("closed");
+                    video.setNumReadings(jsonNode.path("num_hits").asText());
+                    video.setCommentStatus("closed");
                     video.setDuration(jsonNode.path("duration").asText());
 
                     videoList.add(video);
@@ -361,24 +356,24 @@ public class ReadJSONService {
             e.printStackTrace();
         }
 
-        createJsonFile(videoList, "videoProduction.json");
+        createJsonFile(videoList, toFile);
 
         return videoList;
     }
 
-    private String extractYoutubeUrl(String src) {
+    private String extractEmbedVideoUrl(String src) {
         String url = null;
 
-        if (StringUtils.contains(src, "youtube")) {  //TODO keep this just to test not youtube videos
-            return null;
-        }
-        if (StringUtils.startsWithIgnoreCase(src,"<iframe")){
+        if (StringUtils.startsWithIgnoreCase(src, "<iframe")) {
 
-            // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
             Matcher matcher = Pattern.compile("src=\\\\\"([^\"]+)\"").matcher(src);
             boolean found = matcher.find();
             if (found) {
+                // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
                 url = matcher.group(1);
+                if (StringUtils.contains(src, YOUTUBE_COM_EMBED_OLD)) {
+                  url =  url.replace(YOUTUBE_COM_EMBED_OLD, YOUTUBE_COM_EMBED_NEW);
+                }
             }
         }
 

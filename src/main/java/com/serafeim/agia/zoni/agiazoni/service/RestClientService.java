@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.Article;
 import com.serafeim.agia.zoni.agiazoni.model.Edafio;
 import com.serafeim.agia.zoni.agiazoni.model.Post;
+import com.serafeim.agia.zoni.agiazoni.model.Video;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -22,14 +23,16 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
 
+    // Depricate this for this createPostsAccordingToTypeFromJsonFile if it works!!
+    @Deprecated
     public List<Article> createArticlesFromJsonFile(String filename) {
         Article[] articles = new Article[0];
         try {
@@ -171,44 +174,73 @@ public class RestClientService {
             ObjectMapper objectMapper = new ObjectMapper();
             HttpEntity request = new HttpEntity("{\"status\":\"publish\"}", headers);
 
-//            String articleResultAsJsonStr =
-//                    restTemplate.postForObject(url + post.getId(), request, String.class);
-//            JsonNode root;
-//            try {
-//                root = objectMapper.readTree(articleResultAsJsonStr);
-//            } catch (JsonProcessingException e) {
-//                e.printStackTrace();
-//                logger.error("Post not updated: " + e.getMessage());
-//                continue;
-//            }
-//            logger.debug("Post updated: " + root);
-
         }
     }
 
-    public void createPost(List<Post> posts, String url) {
+    public void createPosts(List<Article> posts, String url) {
         HttpHeaders headers = getHttpHeaders();
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        for (Post post : posts) {
+        for (Article post : posts) {
             try {
-                post.setCategories(Set.of(9629));
-                post.setStatus("publish");
-
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity request = new HttpEntity(objectMapper.writeValueAsString(post), headers);
 
                 String jsonNode =
                         restTemplate.postForObject(url, request, String.class);
-                JsonNode root;
-                root = objectMapper.readTree(jsonNode);
-                logger.debug("Post updated: " + root);
+                JsonNode root = objectMapper.readTree(jsonNode);
+                logger.debug(String.format("Post of type %s created: " + root, post.getClass().getName()));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
-                logger.error("Post not updated: " + e.getMessage());
+                logger.error("Post not created: " + e.getMessage());
+            }
+
+        }
+    }
+
+    public <T extends Article> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
+        List posts = new ArrayList();
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            if (clazz.getDeclaredConstructor().newInstance() instanceof Video) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Video[].class));
+            } else {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Article[].class));
+            }
+
+            logger.info(String.format("found articles %d ", posts.size()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return posts;
+    }
+
+    public <T extends Article> void createPostsToWordpressAccordingPostType(List<T> posts, String url) {
+        HttpHeaders headers = getHttpHeaders();
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters()
+                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+        for (T post : posts) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                HttpEntity request = new HttpEntity(objectMapper.writeValueAsString(post), headers);
+
+                String jsonNode =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root = objectMapper.readTree(jsonNode);
+                logger.debug("Post of type created in the web: " + root);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                logger.error("Post not created: " + e.getMessage());
             }
 
         }
