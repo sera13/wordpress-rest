@@ -123,4 +123,10 @@ public class AgiaZoniController {
         return "create videos called " + videos.size();
     }
 
+    @GetMapping("/createSoundJsonFile")
+    public String createSoundJsonFile(@RequestParam String fromFile, @RequestParam String toFile) throws JsonProcessingException {
+        List<Sound> videoJsonFile = readJSONService.createSoundJsonFile(fromFile, toFile);
+        return "createVideoJsonFile called " + videoJsonFile.size();
+    }
+
 }

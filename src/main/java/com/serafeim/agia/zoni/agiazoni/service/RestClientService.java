@@ -84,10 +84,10 @@ public class RestClientService {
         for (Edafio edafio : edafia) {
 
             ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity request =
+            HttpEntity<String> request =
                     null;
             try {
-                request = new HttpEntity(objectMapper.writeValueAsString(edafio), headers);
+                request = new HttpEntity<>(objectMapper.writeValueAsString(edafio), headers);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -133,8 +133,8 @@ public class RestClientService {
         for (Article article : articles) {
 
             ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity request =
-                    new HttpEntity(objectMapper.writeValueAsString(article), headers);
+            HttpEntity<String> request =
+                    new HttpEntity<>(objectMapper.writeValueAsString(article), headers);
 
             String articleResultAsJsonStr =
                     restTemplate.postForObject(url, request, String.class);
@@ -172,7 +172,7 @@ public class RestClientService {
         for (Post post : posts) {
 
             ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity request = new HttpEntity("{\"status\":\"publish\"}", headers);
+            HttpEntity<String> request = new HttpEntity<>("{\"status\":\"publish\"}", headers);
 
         }
     }
@@ -187,7 +187,7 @@ public class RestClientService {
         for (Article post : posts) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity request = new HttpEntity(objectMapper.writeValueAsString(post), headers);
+                HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(post), headers);
 
                 String jsonNode =
                         restTemplate.postForObject(url, request, String.class);
@@ -232,7 +232,7 @@ public class RestClientService {
         for (T post : posts) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity request = new HttpEntity(objectMapper.writeValueAsString(post), headers);
+                HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(post), headers);
 
                 String jsonNode =
                         restTemplate.postForObject(url, request, String.class);

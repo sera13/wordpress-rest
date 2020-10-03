@@ -329,7 +329,7 @@ public class ReadJSONService {
         List<Video> videoList = new ArrayList();
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("videos.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
@@ -361,6 +361,65 @@ public class ReadJSONService {
         return videoList;
     }
 
+    public List<Sound> createSoundJsonFile(String fromFile, String toFile) {
+
+        List<Sound> soundList = new ArrayList();
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                String file = jsonNode.path("file").asText();
+                String embedCode = jsonNode.path("embed_code").asText();
+
+                Sound sound = new Sound();
+                sound.setStatus("publish");
+                sound.setTitle(jsonNode.path("title").asText());
+                sound.setDate(jsonNode.path("date_published").asText());
+                sound.setEditor(jsonNode.path("txt").asText());
+                sound.setImagePreview(jsonNode.path("img").asText());
+                sound.setNumReadings(jsonNode.path("num_hits").asText());
+                sound.setCommentStatus("closed");
+                sound.setDuration(jsonNode.path("duration").asText());
+
+
+                if (!StringUtils.isEmpty(embedCode)) {
+                    String embedCodeUrl = extractEmbedSoundUrl(embedCode);
+                    sound.setSoundLink(embedCodeUrl);
+                    soundList.add(sound);
+                } else if (!StringUtils.isEmpty(file)) {
+                    sound.setFile(file);
+                    soundList.add(sound);
+                }
+            }
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(soundList, toFile);
+
+        return soundList;
+    }
+
+    private String extractEmbedSoundUrl(String embedCode) {
+        String url = null;
+
+        if (StringUtils.startsWithIgnoreCase(embedCode, "<iframe")) {
+
+            Matcher matcher = Pattern.compile("src=\"([^\"]+)\"").matcher(embedCode);
+            boolean found = matcher.find();
+            if (found) {
+                // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
+                url = matcher.group(1);
+            }
+        }
+
+        return url;
+    }
+
     private String extractEmbedVideoUrl(String src) {
         String url = null;
 
@@ -372,7 +431,7 @@ public class ReadJSONService {
                 // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
                 url = matcher.group(1);
                 if (StringUtils.contains(src, YOUTUBE_COM_EMBED_OLD)) {
-                  url =  url.replace(YOUTUBE_COM_EMBED_OLD, YOUTUBE_COM_EMBED_NEW);
+                    url = url.replace(YOUTUBE_COM_EMBED_OLD, YOUTUBE_COM_EMBED_NEW);
                 }
             }
         }
