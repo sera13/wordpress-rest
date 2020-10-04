@@ -27,10 +27,50 @@ public class AgiaZoniController {
 
 
     @GetMapping("/createTaxonomyJsonFiles")
-    public String createTaxonomyJsonFiles(@RequestParam String fromFile, @RequestParam String toFile) {
+    public String createTaxonomyJsonFiles(@RequestParam String fromFile) {
         readJSONService.createTaxonomyJsonFiles(fromFile);
         return "createTaxonomyJsonFiles called";
     }
+
+    @GetMapping("/createTaxonomyWordpressJsonFiles")
+    public String createTaxonomyWordpressJsonFiles(@RequestParam String postType) throws Exception {
+        List<WPTaxonomyDTO> WPTaxonomyDTOS = retreiveWordpressInfoService.getWPTaxonomy(postType);
+        readJSONService.createJsonFile(WPTaxonomyDTOS, "wordpress_" + postType + ".json");
+        return "createTaxonomyWordpressJsonFiles called " + WPTaxonomyDTOS.size();
+    }
+
+    @GetMapping("/createPostWordpressJsonFiles")
+    public String createPostWordpressJsonFiles() throws Exception {
+        List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost();
+        readJSONService.createJsonFile(wpPostDTOS, "wordpress_posts.json");
+        return "createTaxonomyWordpressJsonFiles called " + wpPostDTOS.size();
+    }
+
+    @GetMapping("/parseArticlesToJson")
+    public String parseArticlesToJson(@RequestParam String fromFile) throws Exception {
+        List<Post> wpPosts = restClientService.createPostsFromJsonFile(fromFile);
+        readJSONService.createJsonFile(wpPosts, "wordpress_posts_from_article.json");
+        return "createTaxonomyWordpressJsonFiles called " + wpPosts.size();
+    }
+
+    @GetMapping("/createUpdatePostsDate")
+    public String createUpdatePostsDate(@RequestParam String wppostfile, @RequestParam String wppostdtofile) throws Exception {
+        List<Post> wpPosts = restClientService.createPostsFromJsonFile(wppostfile);
+        List<WPPostDTO> wpPostDTOS = restClientService.createWPPostsFromJsonFile(wppostdtofile);
+        List<Post> posts = restClientService.createPostToupdatePostsDate(wpPosts, wpPostDTOS);
+        readJSONService.createJsonFile(posts, "finalPostsByDate.json");
+
+        return String.format("createUpdatePostsDate called  wpPosts: %s wpPostDTOS: %s posts: %s", wpPosts.size(), wpPostDTOS.size(), posts.size());
+    }
+
+    @GetMapping("/updatePostsDate")
+    public String createUpdatePostsDate(@RequestParam String fromFile) throws Exception {
+        List<Post> wpPosts = restClientService.createPostsFromJsonFile(fromFile);
+        restClientService.updatePostsDate(wpPosts);
+
+        return "updatePostsDate called " + wpPosts.size();
+    }
+
 
     @GetMapping("/createArticlesJsonFile")
     public String createArticlesJsonFile(@RequestParam String fromFile, @RequestParam String toFile) {
@@ -93,7 +133,7 @@ public class AgiaZoniController {
     @GetMapping("/updatePosts")
     public String updatePosts(@RequestParam String filename) throws JsonProcessingException {
         List<Post> postsFromJsonFile = restClientService.createPostsFromJsonFile(filename);
-        restClientService.updatePost(postsFromJsonFile);
+        restClientService.updateEdafiaPost(postsFromJsonFile);
         return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 

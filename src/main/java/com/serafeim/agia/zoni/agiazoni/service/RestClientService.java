@@ -1,12 +1,11 @@
 package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.Article;
-import com.serafeim.agia.zoni.agiazoni.model.Edafio;
-import com.serafeim.agia.zoni.agiazoni.model.Post;
-import com.serafeim.agia.zoni.agiazoni.model.Video;
+import com.serafeim.agia.zoni.agiazoni.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -26,6 +25,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 public class RestClientService {
@@ -160,7 +161,23 @@ public class RestClientService {
         return Arrays.asList(posts);
     }
 
-    public void updatePost(List<Post> posts) {
+    public List<WPPostDTO> createWPPostsFromJsonFile(String wpPostFile) {
+        WPPostDTO[] wpPostDTOS = new WPPostDTO[0];
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(wpPostFile));
+
+            wpPostDTOS = mapper.readValue(jsonFileStream, WPPostDTO[].class);
+
+            logger.info(String.format("found posts %d ", wpPostDTOS.length));
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return Arrays.asList(wpPostDTOS);
+    }
+
+    public void updateEdafiaPost(List<Post> posts) {
         HttpHeaders headers = getHttpHeaders();
 
         String url = "http://localhost:8081/wp-json/wp/v2/edafia/";
@@ -244,5 +261,52 @@ public class RestClientService {
             }
 
         }
+    }
+
+    public List<Post> createPostToupdatePostsDate(List<Post> wpPosts, List<WPPostDTO> wpPostDTOS) {
+        List<Post> posts = new ArrayList<>();
+
+        for (Post post : wpPosts) {
+            wpPostDTOS.stream()
+                    .filter(wpPostDTO1 -> StringUtils.deleteWhitespace(wpPostDTO1.getTitle().getRendered()).equals(StringUtils.deleteWhitespace(post.getTitle())))
+                    .findFirst()
+                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(),post.getDate(),wpPostDTO1.getTitle().getRendered())));
+        }
+
+        return posts;
+
+    }
+
+    public void updatePostsDate(List<Post> posts) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI url;
+        try {
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters()
+                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+        for (Post post : posts) {
+            url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            HttpEntity<String> request =
+                    new HttpEntity<>("{\"date\":\""+ post.getDate() + "\"}", headers);
+
+            String postResultAsJsonStr =
+                    restTemplate.postForObject(url, request, String.class);
+            JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+            logger.info("Article created: " + root);
+        }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+
+            logger.debug("Error in the uri " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
     }
 }

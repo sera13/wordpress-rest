@@ -1,6 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
 public class Taxonomy implements Comparable<Taxonomy> {
+    Integer id;
     String description;
     String name;
     String slug;
@@ -43,6 +44,14 @@ public class Taxonomy implements Comparable<Taxonomy> {
 
     public void setMeta(String meta) {
         this.meta = meta;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     @Override

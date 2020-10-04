@@ -131,8 +131,6 @@ public class ReadJSONService {
         }
 
         createJsonFile(articles, toFile);
-
-
     }
 
     public Set<Source> createSourcesEpikaitotita() {
