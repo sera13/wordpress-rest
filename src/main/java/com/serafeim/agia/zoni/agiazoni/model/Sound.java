@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class Sound extends Article{
-    public String editor;
+    public Integer file;
     public String soundLink;
-    public String imagePreview;
+    public Integer imagePreview;
+    public String editor;
     public String duration;
-    public String file;
+    public String numReadings;
+    public String iframe;
 
     public String getEditor() {
         return editor;
@@ -27,11 +29,11 @@ public class Sound extends Article{
         this.soundLink = soundLink;
     }
 
-    public String getImagePreview() {
+    public Integer getImagePreview() {
         return imagePreview;
     }
 
-    public void setImagePreview(String imagePreview) {
+    public void setImagePreview(Integer imagePreview) {
         this.imagePreview = imagePreview;
     }
 
@@ -43,11 +45,29 @@ public class Sound extends Article{
         this.duration = duration;
     }
 
-    public String getFile() {
+    public Integer getFile() {
         return file;
     }
 
-    public void setFile(String file) {
+    public void setFile(Integer file) {
         this.file = file;
+    }
+
+    @Override
+    public String getNumReadings() {
+        return numReadings;
+    }
+
+    @Override
+    public void setNumReadings(String numReadings) {
+        this.numReadings = numReadings;
+    }
+
+    public String getIframe() {
+        return iframe;
+    }
+
+    public void setIframe(String iframe) {
+        this.iframe = iframe;
     }
 }

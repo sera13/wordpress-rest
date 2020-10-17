@@ -8,15 +8,25 @@ import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Post {
-    Integer id;
-    public String date;
-    public String title;
+    private Integer id;
+    private String date;
+    private String title;
+    private String videoLink;
+
 
     public Post(){}
     public Post(Integer id, String date, String title) {
         this.id = id;
         this.date = date;
         this.title = title;
+        this.videoLink = null;
+    }
+
+    public Post(Integer id, String date, String title, String videoLink) {
+        this.id = id;
+        this.date = date;
+        this.title = title;
+        this.videoLink = videoLink;
     }
 
     public String getDate() {
@@ -39,5 +49,17 @@ public class Post {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getVideoLink() {
+        return videoLink;
+    }
+
+    public void setVideoLink(String videoLink) {
+        this.videoLink = videoLink;
     }
 }

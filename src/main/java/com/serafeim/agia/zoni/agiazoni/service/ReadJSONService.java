@@ -325,6 +325,8 @@ public class ReadJSONService {
     public List<Video> createVideoJsonFile(String fromFile, String toFile) {
 
         List<Video> videoList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
+
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get(fromFile));
@@ -340,7 +342,10 @@ public class ReadJSONService {
                     video.setDate(jsonNode.path("date_published").asText());
                     video.setEditor(jsonNode.path("txt").asText());
                     video.setVideoLink(extractUrl);
-                    video.setImagePreview(jsonNode.path("img").asText());
+                    if (!StringUtils.isEmpty(jsonNode.path("img").asText())) {
+                        String imagestr = jsonNode.path("img").asText(); //StringUtils.substringBefore(jsonNode.path("img").asText(), ".");
+                        video.setImagePreview(getSingleMediaIdsByName(imagestr, mapMedia));
+                    }
                     video.setNumReadings(jsonNode.path("num_hits").asText());
                     video.setCommentStatus("closed");
                     video.setDuration(jsonNode.path("duration").asText());
@@ -362,6 +367,7 @@ public class ReadJSONService {
     public List<Sound> createSoundJsonFile(String fromFile, String toFile) {
 
         List<Sound> soundList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get(fromFile));
@@ -371,24 +377,27 @@ public class ReadJSONService {
                 String file = jsonNode.path("file").asText();
                 String embedCode = jsonNode.path("embed_code").asText();
 
+
                 Sound sound = new Sound();
                 sound.setStatus("publish");
                 sound.setTitle(jsonNode.path("title").asText());
                 sound.setDate(jsonNode.path("date_published").asText());
                 sound.setEditor(jsonNode.path("txt").asText());
-                sound.setImagePreview(jsonNode.path("img").asText());
+                sound.setImagePreview(getSingleMediaIdsByName(jsonNode.path("img").asText(),mapMedia));
                 sound.setNumReadings(jsonNode.path("num_hits").asText());
                 sound.setCommentStatus("closed");
                 sound.setDuration(jsonNode.path("duration").asText());
 
 
+//               TODO currently we should use the iframe since the soundlinks are not correct
                 if (!StringUtils.isEmpty(embedCode)) {
-                    String embedCodeUrl = extractEmbedSoundUrl(embedCode);
-                    sound.setSoundLink(embedCodeUrl);
+//                    String embedCodeUrl = extractEmbedSoundUrl(embedCode);
+//                    sound.setSoundLink(embedCodeUrl);
+                    sound.setIframe(jsonNode.path("embed_code").asText());
                     soundList.add(sound);
                 } else if (!StringUtils.isEmpty(file)) {
-                    sound.setFile(file);
-                    soundList.add(sound);
+//                    sound.setFile(file);
+//                    soundList.add(sound);
                 }
             }
 
@@ -410,7 +419,6 @@ public class ReadJSONService {
             Matcher matcher = Pattern.compile("src=\"([^\"]+)\"").matcher(embedCode);
             boolean found = matcher.find();
             if (found) {
-                // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
                 url = matcher.group(1);
             }
         }
@@ -451,7 +459,7 @@ public class ReadJSONService {
 
     private Integer getSingleMediaIdsByName(String media, Map<String, Integer> mediaMap) {
         for (String s : mediaMap.keySet()) {
-            if (s.contains(media)) {
+            if (s.contains(media) || StringUtils.substringBefore(s, ".jpg").contains(StringUtils.substringBefore(media,".jpg"))) {
                 return mediaMap.get(s);
             }
         }
@@ -586,6 +594,40 @@ public class ReadJSONService {
         String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCOMBINING_DIACRITICAL_MARKS}+");
         return pattern.matcher(nfdNormalizedString).replaceAll("");
+    }
+
+    public List<Photo> createPhotoJsonFile(String fromFile, String toFile) {
+        List<Photo> photoList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
+
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+
+                Photo photo = new Photo();
+                photo.setStatus("publish");
+                photo.setTitle(StringUtils.trim(jsonNode.path("title").asText()));
+                photo.setPhoto(getSingleMediaIdsByName(jsonNode.path("img").asText().replaceAll("[\\\\»«()<>+&@#/%?=~'|!:,.;]", "").trim(), mapMedia));
+                photo.setEditor(StringUtils.trim(jsonNode.path("txt").asText()));
+                photo.setDate(jsonNode.path("date_published").asText());
+                photo.setNumReadings(jsonNode.path("num_hits").asText());
+                photo.setCommentStatus("closed");
+
+                photoList.add(photo);
+
+            }
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(photoList, toFile);
+
+        return photoList;
     }
 }
 

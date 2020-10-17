@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 public class Video extends Article{
     public String editor;
     public String videoLink;
-    public String imagePreview;
+    public Integer imagePreview;
     public String duration;
 
     public String getEditor() {
@@ -26,11 +26,11 @@ public class Video extends Article{
         this.videoLink = videoLink;
     }
 
-    public String getImagePreview() {
+    public Integer getImagePreview() {
         return imagePreview;
     }
 
-    public void setImagePreview(String imagePreview) {
+    public void setImagePreview(Integer imagePreview) {
         this.imagePreview = imagePreview;
     }
 

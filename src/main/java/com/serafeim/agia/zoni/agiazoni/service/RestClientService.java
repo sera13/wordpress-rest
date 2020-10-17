@@ -227,6 +227,10 @@ public class RestClientService {
 
             if (clazz.getDeclaredConstructor().newInstance() instanceof Video) {
                 posts = Arrays.asList(mapper.readValue(jsonFileStream, Video[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Sound) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Sound[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Photo) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Photo[].class));
             } else {
                 posts = Arrays.asList(mapper.readValue(jsonFileStream, Article[].class));
             }
@@ -270,11 +274,18 @@ public class RestClientService {
             wpPostDTOS.stream()
                     .filter(wpPostDTO1 -> StringUtils.deleteWhitespace(wpPostDTO1.getTitle().getRendered()).equals(StringUtils.deleteWhitespace(post.getTitle())))
                     .findFirst()
-                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(),post.getDate(),wpPostDTO1.getTitle().getRendered())));
+                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle().getRendered())));
         }
 
         return posts;
 
+    }
+
+    public List<Post> createVideoToUpdateVideoLink(List<WPPostDTO> wpPosts) {
+        return wpPosts.stream()
+                .filter(wpPostDTO -> StringUtils.startsWith(wpPostDTO.getVideoLink(), "//"))
+                .map(wpPostDTO -> new Post(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
+                .collect(Collectors.toList());
     }
 
     public void updatePostsDate(List<Post> posts) {
@@ -283,23 +294,55 @@ public class RestClientService {
         URI url;
         try {
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        for (Post post : posts) {
-            url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
+            for (Post post : posts) {
+                url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity<String> request =
-                    new HttpEntity<>("{\"date\":\""+ post.getDate() + "\"}", headers);
+                ObjectMapper objectMapper = new ObjectMapper();
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"date\":\"" + post.getDate() + "\"}", headers);
 
-            String postResultAsJsonStr =
-                    restTemplate.postForObject(url, request, String.class);
-            JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+                String postResultAsJsonStr =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
-            logger.info("Article created: " + root);
+                logger.info("Article created: " + root);
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+
+            logger.debug("Error in the uri " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
+
+    }
+    public void updateVideoLinks(List<Post> posts) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI url;
+        try {
+
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            for (Post post : posts) {
+                url = new URI("http://localhost:8081/wp-json/wp/v2/video_posts/" + post.getId());
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"video_link\":\"" +post.getVideoLink() + "\"}", headers);
+
+                String postResultAsJsonStr =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+                logger.info("Article created: " + root);
+            }
         } catch (URISyntaxException e) {
             e.printStackTrace();
 
