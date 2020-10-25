@@ -1,6 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
 public class Taxonomy implements Comparable<Taxonomy> {
+    Integer id;
     String description;
     String name;
     String slug;
@@ -45,8 +46,21 @@ public class Taxonomy implements Comparable<Taxonomy> {
         this.meta = meta;
     }
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     @Override
     public int compareTo(Taxonomy taxonomy) {
-        return this.name.compareTo(taxonomy.getName());
+        return this.slug.compareTo(taxonomy.getSlug());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[description: %s name: %s slug: %s]", this.description, this.name, this.slug);
     }
 }
