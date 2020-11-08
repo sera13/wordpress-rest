@@ -76,7 +76,8 @@ public class RetreiveWordpressInfoService {
         List<WPPostDTO> posts = new ArrayList<>();
         int index = 1;
         while (true) {
-            WPPostDTO[] partialPosts = restTemplate.getForObject("http://localhost:8081/wp-json/wp/v2/" + type + "?categories_exclude=9625,9626,9629&per_page=100&page=" + index, WPPostDTO[].class);
+//            WPPostDTO[] partialPosts = restTemplate.getForObject("http://localhost:8081/wp-json/wp/v2/" + type + "?categories_exclude=9625,9626,9629&per_page=100&page=" + index, WPPostDTO[].class);
+            WPPostDTO[] partialPosts = restTemplate.getForObject("http://localhost:8081/wp-json/wp/v2/" + type + "?categories=9629&per_page=100&page=" + index, WPPostDTO[].class);
             assert partialPosts != null;
             if (partialPosts.length > 0) {
                 posts.addAll(List.of(partialPosts));

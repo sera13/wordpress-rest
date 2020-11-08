@@ -1,7 +1,6 @@
 package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.*;
@@ -25,7 +24,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -351,5 +349,10 @@ public class RestClientService {
             e.printStackTrace();
         }
 
+    }
+    public List<Post> createPostsFromWpPostDTOJsonObjectList(List<WPPostDTO> wpPostDTOS) {
+        return wpPostDTOS.stream()
+                .map(wpPostDTO -> new Post(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
+                .collect(Collectors.toList());
     }
 }
