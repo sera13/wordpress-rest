@@ -1,7 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
@@ -10,11 +10,15 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  */
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+
+
 public class WPPostDTO {
     TitleDTO title;
     Integer id;
     String date;
-    private String videoLink;
+    String videoLink;
+    String ennoima;
 
 
     public WPPostDTO() {
@@ -58,5 +62,13 @@ public class WPPostDTO {
 
     public void setVideoLink(String videoLink) {
         this.videoLink = videoLink;
+    }
+
+    public String getEnnoima() {
+        return ennoima;
+    }
+
+    public void setEnnoima(String ennoima) {
+        this.ennoima = ennoima;
     }
 }

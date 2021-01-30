@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -272,7 +273,37 @@ public class RestClientService {
             wpPostDTOS.stream()
                     .filter(wpPostDTO1 -> StringUtils.deleteWhitespace(wpPostDTO1.getTitle().getRendered()).equals(StringUtils.deleteWhitespace(post.getTitle())))
                     .findFirst()
-                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle().getRendered())));
+                    .ifPresent(wpPostDTO1 -> posts.add(new Post(BigInteger.valueOf(wpPostDTO1.getId()), post.getDate(), wpPostDTO1.getTitle().getRendered())));
+        }
+
+        return posts;
+
+    }
+
+    public List<Post> createPostToupdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
+        List<Post> posts = new ArrayList<>();
+
+        for (Post postSingleEnnoima : postsSingleEnnoima) {
+            postsMultiEnnoima.stream()
+                    .filter(postMultiEnnoima ->
+                            StringUtils.deleteWhitespace(postSingleEnnoima.getEnnoima())
+                                    .equals(StringUtils.deleteWhitespace(ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees1()) +
+                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees2())
+                                            + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees3()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees4())
+                                            + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees5()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees6()) +
+                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees7()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees8()) +
+                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees9()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees10()))))
+                    .findFirst()
+                    .ifPresentOrElse(post1 -> posts.add(new Post(postSingleEnnoima.getId(), post1.getDate(), post1.getTitle(), postSingleEnnoima.getEnnoima(), post1.getVideoLink()
+                                    , ReadJSONService.getTextIfEmptyOrNull(post1.getIdees1()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees2()),
+                                    ReadJSONService.getTextIfEmptyOrNull(post1.getIdees3()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees4()),
+                                    ReadJSONService.getTextIfEmptyOrNull(post1.getIdees5()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees6()),
+                                    ReadJSONService.getTextIfEmptyOrNull(post1.getIdees7()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees8()),
+                                    ReadJSONService.getTextIfEmptyOrNull(post1.getIdees9()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees10()))),
+                            () -> {
+                                // Its not matching
+                                logger.error(String.format("Post with id %s and title %s did not found", postSingleEnnoima.getId(), postSingleEnnoima.getTitle()));
+                            });
         }
 
         return posts;
@@ -282,7 +313,7 @@ public class RestClientService {
     public List<Post> createVideoToUpdateVideoLink(List<WPPostDTO> wpPosts) {
         return wpPosts.stream()
                 .filter(wpPostDTO -> StringUtils.startsWith(wpPostDTO.getVideoLink(), "//"))
-                .map(wpPostDTO -> new Post(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
+                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
                 .collect(Collectors.toList());
     }
 
@@ -318,6 +349,7 @@ public class RestClientService {
         }
 
     }
+
     public void updateVideoLinks(List<Post> posts) {
         HttpHeaders headers = getHttpHeaders();
 
@@ -333,7 +365,7 @@ public class RestClientService {
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request =
-                        new HttpEntity<>("{\"video_link\":\"" +post.getVideoLink() + "\"}", headers);
+                        new HttpEntity<>("{\"video_link\":\"" + post.getVideoLink() + "\"}", headers);
 
                 String postResultAsJsonStr =
                         restTemplate.postForObject(url, request, String.class);
@@ -350,9 +382,56 @@ public class RestClientService {
         }
 
     }
+
+    public void updateEnnoima(List<Post> posts) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI url;
+        try {
+
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            for (Post post : posts) {
+                url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                Post postRequest = new Post();
+                postRequest.setIdees1(StringUtils.isEmpty(post.getIdees1()) ? null : post.getIdees1().trim());
+                postRequest.setIdees2(StringUtils.isEmpty(post.getIdees2()) ? null : post.getIdees2().trim());
+                postRequest.setIdees3(StringUtils.isEmpty(post.getIdees3()) ? null : post.getIdees3().trim());
+                postRequest.setIdees4(StringUtils.isEmpty(post.getIdees4()) ? null : post.getIdees4().trim());
+                postRequest.setIdees5(StringUtils.isEmpty(post.getIdees5()) ? null : post.getIdees5().trim());
+                postRequest.setIdees6(StringUtils.isEmpty(post.getIdees6()) ? null : post.getIdees6().trim());
+                postRequest.setIdees7(StringUtils.isEmpty(post.getIdees7()) ? null : post.getIdees7().trim());
+                postRequest.setIdees8(StringUtils.isEmpty(post.getIdees8()) ? null : post.getIdees8().trim());
+                postRequest.setIdees9(StringUtils.isEmpty(post.getIdees9()) ? null : post.getIdees9().trim());
+                postRequest.setIdees10(StringUtils.isEmpty(post.getIdees10()) ? null : post.getIdees10().trim());
+
+                HttpEntity<Post> request =
+                        new HttpEntity<>(postRequest, headers);
+
+                String postResultAsJsonStr =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+                logger.info("Article created: " + root);
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+
+            logger.debug("Error in the uri " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public List<Post> createPostsFromWpPostDTOJsonObjectList(List<WPPostDTO> wpPostDTOS) {
         return wpPostDTOS.stream()
-                .map(wpPostDTO -> new Post(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
+                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink(), wpPostDTO.getEnnoima()))
                 .collect(Collectors.toList());
     }
 }

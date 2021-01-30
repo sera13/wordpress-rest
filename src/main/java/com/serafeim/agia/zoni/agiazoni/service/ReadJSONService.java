@@ -477,8 +477,8 @@ public class ReadJSONService {
         return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
     }
 
-    private String getTextIfEmptyOrNull(String text) {
-        return text.equals("null") || StringUtils.isEmpty(text) ? "" : text + " ";
+    public static String getTextIfEmptyOrNull(String text) {
+        return  StringUtils.isEmpty(text) || text.equals("null") ? "" : text + " ";
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {

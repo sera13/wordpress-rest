@@ -42,18 +42,18 @@ public class AgiaZoniController {
     }
 
     @GetMapping("/createPostWordpressJsonFiles")
-    public String createPostWordpressJsonFiles(@RequestParam String postType) {
-        List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost(postType);
+    public String createPostWordpressJsonFiles(@RequestParam String postType, @RequestParam String filename) {
+        List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost(postType, "9625,9626,9629");
         readJSONService.createJsonFile(wpPostDTOS, "wordpress_" + postType + ".json");
         List<Post> posts = restClientService.createPostsFromWpPostDTOJsonObjectList(wpPostDTOS);
-        readJSONService.createJsonFile(posts, "synaxaristisBydate.json" );
+        readJSONService.createJsonFile(posts, filename + ".json");
         return "createPostWordpressJsonFiles called " + wpPostDTOS.size();
     }
 
     @GetMapping("/parseArticlesToJson")
     public String parseArticlesToJson(@RequestParam String fromFile) {
         List<Post> wpPosts = restClientService.createPostsFromJsonFile(fromFile);
-        readJSONService.createJsonFile(wpPosts, "wordpress_posts_from_article.json");
+        readJSONService.createJsonFile(wpPosts, "wordpress_posts_" + fromFile);
         return "createTaxonomyWordpressJsonFiles called " + wpPosts.size();
     }
 
@@ -67,6 +67,16 @@ public class AgiaZoniController {
         return String.format("createUpdatePostsDate called  wpPosts: %s wpPostDTOS: %s posts: %s", wpPosts.size(), wpPostDTOS.size(), posts.size());
     }
 
+    @GetMapping("/createUpdatePostsEnnoima")
+    public String createUpdatePostsEnnoima(@RequestParam String postsOneEnnoimaFile, @RequestParam String postsMultiEnnoimaFile) {
+        List<Post> postsOneEnnoima = restClientService.createPostsFromJsonFile(postsOneEnnoimaFile);
+        List<Post> postsMultiEnnoima = restClientService.createPostsFromJsonFile(postsMultiEnnoimaFile);
+        List<Post> posts = restClientService.createPostToupdatePostsEnnoima(postsOneEnnoima, postsMultiEnnoima);
+        readJSONService.createJsonFile(posts, "finalPostsByEnnoima.json");
+
+        return String.format("createUpdatePostsEnnoima called  postsOneEnnoima: %s postsMultipleEnnoima: %s posts: %s", postsOneEnnoima.size(), postsMultiEnnoima.size(), posts.size());
+    }
+
     @GetMapping("/createUpdateVideoLink")
     public String createUpdateVideoLink(@RequestParam String wppostfile) {
         List<WPPostDTO> wpPosts = restClientService.createWPPostsFromJsonFile(wppostfile);
@@ -75,12 +85,20 @@ public class AgiaZoniController {
 
         return String.format("createUpdateVideoLink called  wpPosts: %s  posts: %s", wpPosts.size(), posts.size());
     }
+
     @GetMapping("/updateVideoLink")
     public String updateVideoLink(@RequestParam String fromfile) {
         List<Post> posts = restClientService.createPostsFromJsonFile(fromfile);
         restClientService.updateVideoLinks(posts);
 
-        return String.format("updateVideoLink called posts: %s",posts.size());
+        return String.format("updateVideoLink called posts: %s", posts.size());
+    }
+    @GetMapping("/updateEnnoima")
+    public String updateEnnoima(@RequestParam String fromfile) {
+        List<Post> posts = restClientService.createPostsFromJsonFile(fromfile);
+        restClientService.updateEnnoima(posts);
+
+        return String.format("updateEnnoima called posts: %s", posts.size());
     }
 
     @GetMapping("/updatePostsDate")
@@ -96,13 +114,6 @@ public class AgiaZoniController {
     public String createArticlesJsonFile(@RequestParam String fromFile, @RequestParam String toFile) {
         readJSONService.createArticlesJsonFile(fromFile, toFile);
         return "createArticlesJsonFile called";
-    }
-
-    @GetMapping("/getAllPosts")
-    public String getAllPosts(@RequestParam String postType) throws Exception {
-        List<Post> posts = retreiveWordpressInfoService.getAllPosts(postType);
-        readJSONService.createJsonFile(posts, "wordpress_" + postType + ".json");
-        return "getAllPosts called " + posts.size();
     }
 
     @GetMapping("/getAllMedia")
@@ -207,7 +218,7 @@ public class AgiaZoniController {
     public String createPhotoFromJsonFile(@RequestParam String filename) {
         List<Photo> photos = restClientService.getPostsAccordingToTypeFromJsonFile(filename, Photo.class);
         restClientService.createPostsToWordpressAccordingPostType(photos, HTTP_PHOTO);
-        
+
         return "createSoundFromJsonFile called " + photos.size();
     }
 
