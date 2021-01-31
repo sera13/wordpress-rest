@@ -12,13 +12,22 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
-
 public class WPPostDTO {
     TitleDTO title;
     Integer id;
     String date;
     String videoLink;
     String ennoima;
+    String idees1;
+    String idees2;
+    String idees3;
+    String idees4;
+    String idees5;
+    String idees6;
+    String idees7;
+    String idees8;
+    String idees9;
+    String idees10;
 
 
     public WPPostDTO() {
@@ -62,6 +71,86 @@ public class WPPostDTO {
 
     public void setVideoLink(String videoLink) {
         this.videoLink = videoLink;
+    }
+
+    public String getIdees1() {
+        return idees1;
+    }
+
+    public void setIdees1(String idees1) {
+        this.idees1 = idees1;
+    }
+
+    public String getIdees2() {
+        return idees2;
+    }
+
+    public void setIdees2(String idees2) {
+        this.idees2 = idees2;
+    }
+
+    public String getIdees3() {
+        return idees3;
+    }
+
+    public void setIdees3(String idees3) {
+        this.idees3 = idees3;
+    }
+
+    public String getIdees4() {
+        return idees4;
+    }
+
+    public void setIdees4(String idees4) {
+        this.idees4 = idees4;
+    }
+
+    public String getIdees5() {
+        return idees5;
+    }
+
+    public void setIdees5(String idees5) {
+        this.idees5 = idees5;
+    }
+
+    public String getIdees6() {
+        return idees6;
+    }
+
+    public void setIdees6(String idees6) {
+        this.idees6 = idees6;
+    }
+
+    public String getIdees7() {
+        return idees7;
+    }
+
+    public void setIdees7(String idees7) {
+        this.idees7 = idees7;
+    }
+
+    public String getIdees8() {
+        return idees8;
+    }
+
+    public void setIdees8(String idees8) {
+        this.idees8 = idees8;
+    }
+
+    public String getIdees9() {
+        return idees9;
+    }
+
+    public void setIdees9(String idees9) {
+        this.idees9 = idees9;
+    }
+
+    public String getIdees10() {
+        return idees10;
+    }
+
+    public void setIdees10(String idees10) {
+        this.idees10 = idees10;
     }
 
     public String getEnnoima() {

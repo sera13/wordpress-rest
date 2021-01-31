@@ -266,18 +266,39 @@ public class RestClientService {
         }
     }
 
-    public List<Post> createPostToupdatePostsDate(List<Post> wpPosts, List<WPPostDTO> wpPostDTOS) {
+    public List<Post> createPostToupdatePostsDate(List<Post> wpPosts, List<Post> wpPostDTOS) {
         List<Post> posts = new ArrayList<>();
 
         for (Post post : wpPosts) {
             wpPostDTOS.stream()
-                    .filter(wpPostDTO1 -> StringUtils.deleteWhitespace(wpPostDTO1.getTitle().getRendered()).equals(StringUtils.deleteWhitespace(post.getTitle())))
+                    .filter(wpPostDTO1 ->
+                            StringUtils.deleteWhitespace(wpPostDTO1.getTitle()).equals(StringUtils.deleteWhitespace(post.getTitle()))
+                                ||
+                                    isEnnoimaAllFieldsEquals(post, wpPostDTO1)
+                                    )
                     .findFirst()
-                    .ifPresent(wpPostDTO1 -> posts.add(new Post(BigInteger.valueOf(wpPostDTO1.getId()), post.getDate(), wpPostDTO1.getTitle().getRendered())));
+                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle())));
         }
 
         return posts;
 
+    }
+
+    private boolean isEnnoimaAllFieldsEquals(Post post, Post wpPostDTO1) {
+        // No need to test all ennoima
+        return isEqualsWithNoSpace(post.getIdees1(), wpPostDTO1.getIdees1())
+                && isEqualsWithNoSpace(post.getIdees2(), wpPostDTO1.getIdees2());
+//                && isEqualsWithNoSpace(post.getIdees3(), wpPostDTO1.getIdees3())
+//                && isEqualsWithNoSpace(post.getIdees4(), wpPostDTO1.getIdees4())
+//                && isEqualsWithNoSpace(post.getIdees5(), wpPostDTO1.getIdees5())
+//                && isEqualsWithNoSpace(post.getIdees6(), wpPostDTO1.getIdees6())
+//                && isEqualsWithNoSpace(post.getIdees7(), wpPostDTO1.getIdees7())
+//                && isEqualsWithNoSpace(post.getIdees8(), wpPostDTO1.getIdees8())
+//                && isEqualsWithNoSpace(post.getIdees9(), wpPostDTO1.getIdees9());
+    }
+
+    private boolean isEqualsWithNoSpace(String str1, String str2) {
+        return StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
     }
 
     public List<Post> createPostToupdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
@@ -286,13 +307,7 @@ public class RestClientService {
         for (Post postSingleEnnoima : postsSingleEnnoima) {
             postsMultiEnnoima.stream()
                     .filter(postMultiEnnoima ->
-                            StringUtils.deleteWhitespace(postSingleEnnoima.getEnnoima())
-                                    .equals(StringUtils.deleteWhitespace(ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees1()) +
-                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees2())
-                                            + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees3()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees4())
-                                            + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees5()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees6()) +
-                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees7()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees8()) +
-                                            ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees9()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees10()))))
+                            isEnnoimaEquals(postSingleEnnoima, postMultiEnnoima))
                     .findFirst()
                     .ifPresentOrElse(post1 -> posts.add(new Post(postSingleEnnoima.getId(), post1.getDate(), post1.getTitle(), postSingleEnnoima.getEnnoima(), post1.getVideoLink()
                                     , ReadJSONService.getTextIfEmptyOrNull(post1.getIdees1()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees2()),
@@ -308,6 +323,16 @@ public class RestClientService {
 
         return posts;
 
+    }
+
+    private boolean isEnnoimaEquals(Post postSingleEnnoima, Post postMultiEnnoima) {
+        return StringUtils.deleteWhitespace(postSingleEnnoima.getEnnoima())
+                .equals(StringUtils.deleteWhitespace(ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees1()) +
+                        ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees2())
+                        + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees3()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees4())
+                        + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees5()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees6()) +
+                        ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees7()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees8()) +
+                        ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees9()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees10())));
     }
 
     public List<Post> createVideoToUpdateVideoLink(List<WPPostDTO> wpPosts) {
@@ -328,7 +353,7 @@ public class RestClientService {
                     .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             for (Post post : posts) {
-                url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
+                url = new URI("http://agiazoni.gr/wp-json/wp/v2/posts/" + post.getId());
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request =
@@ -338,7 +363,7 @@ public class RestClientService {
                         restTemplate.postForObject(url, request, String.class);
                 JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
-                logger.info("Article created: " + root);
+                logger.info("Article updated: " + root);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -431,7 +456,21 @@ public class RestClientService {
 
     public List<Post> createPostsFromWpPostDTOJsonObjectList(List<WPPostDTO> wpPostDTOS) {
         return wpPostDTOS.stream()
-                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink(), wpPostDTO.getEnnoima()))
+//                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink(), wpPostDTO.getEnnoima()))
+                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(),
+                        null,
+                        null,
+                        wpPostDTO.getIdees1(),
+                        wpPostDTO.getIdees2(),
+                        wpPostDTO.getIdees3(),
+                        wpPostDTO.getIdees4(),
+                        wpPostDTO.getIdees5(),
+                        wpPostDTO.getIdees6(),
+                        wpPostDTO.getIdees7(),
+                        wpPostDTO.getIdees8(),
+                        wpPostDTO.getIdees9(),
+                        wpPostDTO.getIdees10()
+                ))
                 .collect(Collectors.toList());
     }
 }

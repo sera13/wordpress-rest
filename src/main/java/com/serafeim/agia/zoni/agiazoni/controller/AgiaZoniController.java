@@ -43,7 +43,7 @@ public class AgiaZoniController {
 
     @GetMapping("/createPostWordpressJsonFiles")
     public String createPostWordpressJsonFiles(@RequestParam String postType, @RequestParam String filename) {
-        List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost(postType, "9625,9626,9629");
+        List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost(postType, "9625,9626,9629,9676");
         readJSONService.createJsonFile(wpPostDTOS, "wordpress_" + postType + ".json");
         List<Post> posts = restClientService.createPostsFromWpPostDTOJsonObjectList(wpPostDTOS);
         readJSONService.createJsonFile(posts, filename + ".json");
@@ -60,8 +60,8 @@ public class AgiaZoniController {
     @GetMapping("/createUpdatePostsDate")
     public String createUpdatePostsDate(@RequestParam String wppostfile, @RequestParam String wppostdtofile) {
         List<Post> wpPosts = restClientService.createPostsFromJsonFile(wppostfile);
-        List<WPPostDTO> wpPostDTOS = restClientService.createWPPostsFromJsonFile(wppostdtofile);
-        List<Post> posts = restClientService.createPostToupdatePostsDate(wpPosts, wpPostDTOS);
+        List<Post> wpPostDTOS = restClientService.createPostsFromJsonFile(wppostdtofile);
+        List<Post> posts = restClientService.createPostToupdatePostsDate(wpPostDTOS, wpPosts);
         readJSONService.createJsonFile(posts, "finalPostsByDate.json");
 
         return String.format("createUpdatePostsDate called  wpPosts: %s wpPostDTOS: %s posts: %s", wpPosts.size(), wpPostDTOS.size(), posts.size());

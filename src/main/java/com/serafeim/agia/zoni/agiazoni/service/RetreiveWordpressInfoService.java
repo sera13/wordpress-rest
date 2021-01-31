@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class RetreiveWordpressInfoService {
 
-    public static final String WEBSITE_URL = "http://localhost:8081/wp-json/wp/v2/";
+    public static final String WEBSITE_URL = "http://serafeimkourlos.xyz/wp-json/wp/v2/";
     public static final String USERNAME = "serafeim";
     public static final String PASSWORD = "NFBN57Z8sVXs!a1N(IsFMdT(";
     Logger logger = LoggerFactory.getLogger(RetreiveWordpressInfoService.class);
