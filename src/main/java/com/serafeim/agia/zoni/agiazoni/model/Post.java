@@ -23,6 +23,7 @@ public class Post {
     private String idees8;
     private String idees9;
     private String idees10;
+    private String age;
 
 
     public Post(){}
@@ -40,12 +41,6 @@ public class Post {
         this.videoLink = null;
     }
 
-    public Post(BigInteger id, String date, String title, String videoLink) {
-        this.id = id;
-        this.date = date;
-        this.title = title;
-        this.videoLink = videoLink;
-    }
 
     public Post(BigInteger id, String date, String title, String ennoima, String videoLink, String idees1, String idees2, String idees3, String idees4, String idees5, String idees6, String idees7, String idees8, String idees9, String idees10) {
         this.id = id;
@@ -63,6 +58,32 @@ public class Post {
         this.idees8 = idees8;
         this.idees9 = idees9;
         this.idees10 = idees10;
+    }
+
+    public Post(BigInteger id, String date, String title, String ennoima, String videoLink, String idees1, String idees2, String idees3, String idees4, String idees5, String idees6, String idees7, String idees8, String idees9, String idees10, String age) {
+        this.id = id;
+        this.date = date;
+        this.title = title;
+        this.ennoima = ennoima;
+        this.videoLink = videoLink;
+        this.idees1 = idees1;
+        this.idees2 = idees2;
+        this.idees3 = idees3;
+        this.idees4 = idees4;
+        this.idees5 = idees5;
+        this.idees6 = idees6;
+        this.idees7 = idees7;
+        this.idees8 = idees8;
+        this.idees9 = idees9;
+        this.idees10 = idees10;
+        this.age = age;
+    }
+
+    public Post(BigInteger id, String date, String title, String age) {
+        this.id = id;
+        this.date = date;
+        this.title = title;
+        this.age = age;
     }
 
     public String getDate() {
@@ -185,5 +206,13 @@ public class Post {
 
     public void setIdees10(String idees10) {
         this.idees10 = idees10;
+    }
+
+    public String getAge() {
+        return age;
+    }
+
+    public void setAge(String age) {
+        this.age = age;
     }
 }

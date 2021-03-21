@@ -5,15 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -22,6 +29,10 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -110,7 +121,8 @@ public class RestClientService {
     private HttpHeaders getHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBasicAuth("serafeim", "NFBN57Z8sVXs!a1N(IsFMdT(");
+//      headers.setBasicAuth("serafeim", "NFBN57Z8sVXs!a1N(IsFMdT(");
+        headers.setBasicAuth("serafeim", "8rxc OXTR KUvH a8Jw kUHr OqG3");
         return headers;
     }
 
@@ -120,7 +132,7 @@ public class RestClientService {
 
         URI url = null;
         try {
-            url = new URI("http://localhost:8081/wp-json/wp/v2/posts");
+            url = new URI("https://localhost:8081/wp-json/wp/v2/posts");
         } catch (URISyntaxException e) {
             e.printStackTrace();
 
@@ -272,12 +284,13 @@ public class RestClientService {
         for (Post post : wpPosts) {
             wpPostDTOS.stream()
                     .filter(wpPostDTO1 ->
-                            StringUtils.deleteWhitespace(wpPostDTO1.getTitle()).equals(StringUtils.deleteWhitespace(post.getTitle()))
-                                ||
-                                    isEnnoimaAllFieldsEquals(post, wpPostDTO1)
-                                    )
+                            (StringUtils.deleteWhitespace(wpPostDTO1.getTitle()).equals(StringUtils.deleteWhitespace(post.getTitle()))
+                                    ||
+                                    isEnnoimaAllFieldsEquals(post, wpPostDTO1))
+                            && StringUtils.isNotEmpty(post.getAge())
+                    )
                     .findFirst()
-                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle())));
+                    .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle(), post.getAge())));
         }
 
         return posts;
@@ -286,8 +299,13 @@ public class RestClientService {
 
     private boolean isEnnoimaAllFieldsEquals(Post post, Post wpPostDTO1) {
         // No need to test all ennoima
-        return isEqualsWithNoSpace(post.getIdees1(), wpPostDTO1.getIdees1())
-                && isEqualsWithNoSpace(post.getIdees2(), wpPostDTO1.getIdees2());
+        boolean isEqual = false;
+        try {
+            isEqual = isEqualsWithNoSpace(post.getIdees1(), wpPostDTO1.getIdees1());
+        } catch (Exception e) {
+            logger.error(String.format("comparing: %s with %s", post.getIdees1(), wpPostDTO1.getIdees1()));
+        }
+//                && isEqualsWithNoSpace(post.getIdees2(), wpPostDTO1.getIdees2());
 //                && isEqualsWithNoSpace(post.getIdees3(), wpPostDTO1.getIdees3())
 //                && isEqualsWithNoSpace(post.getIdees4(), wpPostDTO1.getIdees4())
 //                && isEqualsWithNoSpace(post.getIdees5(), wpPostDTO1.getIdees5())
@@ -295,10 +313,11 @@ public class RestClientService {
 //                && isEqualsWithNoSpace(post.getIdees7(), wpPostDTO1.getIdees7())
 //                && isEqualsWithNoSpace(post.getIdees8(), wpPostDTO1.getIdees8())
 //                && isEqualsWithNoSpace(post.getIdees9(), wpPostDTO1.getIdees9());
+        return isEqual;
     }
 
     private boolean isEqualsWithNoSpace(String str1, String str2) {
-        return StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
+        return StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str1)  && StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
     }
 
     public List<Post> createPostToupdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
@@ -348,16 +367,16 @@ public class RestClientService {
         URI url;
         try {
 
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = restTemplate();
             restTemplate.getMessageConverters()
                     .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             for (Post post : posts) {
-                url = new URI("http://agiazoni.gr/wp-json/wp/v2/posts/" + post.getId());
+                url = new URI("https://agiazoni.gr/wp-json/wp/v2/posts/" + post.getId());
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request =
-                        new HttpEntity<>("{\"date\":\"" + post.getDate() + "\"}", headers);
+                        new HttpEntity<>("{\"fields\": {\"xronos_ekdosis\":\"" + post.getAge() + "\"}}", headers);
 
                 String postResultAsJsonStr =
                         restTemplate.postForObject(url, request, String.class);
@@ -369,7 +388,7 @@ public class RestClientService {
             e.printStackTrace();
 
             logger.debug("Error in the uri " + e.getMessage());
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             e.printStackTrace();
         }
 
@@ -472,5 +491,27 @@ public class RestClientService {
                         wpPostDTO.getIdees10()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Bean
+    public RestTemplate restTemplate()
+            throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build();
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+        return new RestTemplate(requestFactory);
     }
 }

@@ -54,7 +54,7 @@ public class AgiaZoniController {
     public String parseArticlesToJson(@RequestParam String fromFile) {
         List<Post> wpPosts = restClientService.createPostsFromJsonFile(fromFile);
         readJSONService.createJsonFile(wpPosts, "wordpress_posts_" + fromFile);
-        return "createTaxonomyWordpressJsonFiles called " + wpPosts.size();
+        return "parseArticlesToJson called " + wpPosts.size();
     }
 
     @GetMapping("/createUpdatePostsDate")
@@ -62,7 +62,7 @@ public class AgiaZoniController {
         List<Post> wpPosts = restClientService.createPostsFromJsonFile(wppostfile);
         List<Post> wpPostDTOS = restClientService.createPostsFromJsonFile(wppostdtofile);
         List<Post> posts = restClientService.createPostToupdatePostsDate(wpPostDTOS, wpPosts);
-        readJSONService.createJsonFile(posts, "finalPostsByDate.json");
+        readJSONService.createJsonFile(posts, "finalPostsByAge.json");
 
         return String.format("createUpdatePostsDate called  wpPosts: %s wpPostDTOS: %s posts: %s", wpPosts.size(), wpPostDTOS.size(), posts.size());
     }

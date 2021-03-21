@@ -21,7 +21,7 @@ public class RetreiveWordpressInfoService {
     public static final String PASSWORD = "NFBN57Z8sVXs!a1N(IsFMdT(";
     Logger logger = LoggerFactory.getLogger(RetreiveWordpressInfoService.class);
 
-    public List<WPTaxonomyDTO> getWPTaxonomy(String kindOfTaxonomy) throws Exception {
+    public List<WPTaxonomyDTO> getWPTaxonomy(String kindOfTaxonomy) {
 
         RestTemplate restTemplate = new RestTemplateBuilder().basicAuthentication(USERNAME, PASSWORD).build();
         List<WPTaxonomyDTO> posts = new ArrayList<>();
