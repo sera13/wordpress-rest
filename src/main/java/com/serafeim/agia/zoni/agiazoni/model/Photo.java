@@ -1,10 +1,12 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class Photo extends Article{
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Photo extends Post {
  private Integer photo;
  private String editor;
 

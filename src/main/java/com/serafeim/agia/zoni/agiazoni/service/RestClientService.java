@@ -13,19 +13,13 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,42 +29,6 @@ import static com.serafeim.agia.zoni.agiazoni.service.RestClientUtil.getHttpHead
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
 
-
-    // Depricate this for this createPostsAccordingToTypeFromJsonFile if it works!!
-    @Deprecated
-    public List<Article> createArticlesFromJsonFile(String filename) {
-        Article[] articles = new Article[0];
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
-
-            articles = mapper.readValue(jsonFileStream, Article[].class);
-
-            logger.info(String.format("found articles %d ", articles.length));
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return Arrays.asList(articles);
-    }
-
-    public List<Edafio> createEdafiaFromJsonFile(String filename) {
-        Edafio[] edafia = new Edafio[0];
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
-
-            edafia = mapper.readValue(jsonFileStream, Edafio[].class);
-
-            logger.info(String.format("found edafia %d ", edafia.length));
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return Arrays.asList(edafia);
-    }
-
-    //TODO this can be of type Post
     public void createEdafia(List<Edafio> edafia) {
         HttpHeaders headers = getHttpHeaders();
 
@@ -113,7 +71,7 @@ public class RestClientService {
     }
 
 
-    public void createArticles(List<Article> articles) throws JsonProcessingException {
+    public void createArticles(List<Post> articles) throws JsonProcessingException {
         HttpHeaders headers = getHttpHeaders();
 
         URI url = null;
@@ -128,7 +86,7 @@ public class RestClientService {
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        for (Article article : articles) {
+        for (Post article : articles) {
 
             ObjectMapper objectMapper = new ObjectMapper();
             HttpEntity<String> request =
@@ -138,57 +96,10 @@ public class RestClientService {
                     restTemplate.postForObject(url, request, String.class);
             JsonNode root = objectMapper.readTree(articleResultAsJsonStr);
 
-            logger.info("Article created: " + root);
+            logger.info("Post created: " + root);
         }
     }
 
-    public List<Post> createPostsFromJsonFile(String filename) {
-        Post[] posts = new Post[0];
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
-
-            posts = mapper.readValue(jsonFileStream, Post[].class);
-
-            logger.info(String.format("found posts %d ", posts.length));
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return Arrays.asList(posts);
-    }
-
-    public List<Taxonomy> createTaxonomyFromJsonFile(String filename) {
-        Taxonomy[] taxonomies = new ArticleAuthor[0];
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
-
-            taxonomies = mapper.readValue(jsonFileStream, ArticleAuthor[].class);
-
-            logger.info(String.format("found taxonomies %d ", taxonomies.length));
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return Arrays.asList(taxonomies);
-    }
-
-    public List<WPPostDTO> createWPPostsFromJsonFile(String wpPostFile) {
-        WPPostDTO[] wpPostDTOS = new WPPostDTO[0];
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(wpPostFile));
-
-            wpPostDTOS = mapper.readValue(jsonFileStream, WPPostDTO[].class);
-
-            logger.info(String.format("found posts %d ", wpPostDTOS.length));
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return Arrays.asList(wpPostDTOS);
-    }
 
     public void updateEdafiaPost(List<Post> posts) {
         HttpHeaders headers = getHttpHeaders();
@@ -207,14 +118,14 @@ public class RestClientService {
         }
     }
 
-    public void createPosts(List<Article> posts, String url) {
+    public void createPosts(List<Post> posts, String url) {
         HttpHeaders headers = getHttpHeaders();
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        for (Article post : posts) {
+        for (Post post : posts) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(post), headers);
@@ -231,32 +142,7 @@ public class RestClientService {
         }
     }
 
-    public <T extends Article> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
-        List posts = new ArrayList();
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
-
-            if (clazz.getDeclaredConstructor().newInstance() instanceof Video) {
-                posts = Arrays.asList(mapper.readValue(jsonFileStream, Video[].class));
-            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Sound) {
-                posts = Arrays.asList(mapper.readValue(jsonFileStream, Sound[].class));
-            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Photo) {
-                posts = Arrays.asList(mapper.readValue(jsonFileStream, Photo[].class));
-            } else {
-                posts = Arrays.asList(mapper.readValue(jsonFileStream, Article[].class));
-            }
-
-            logger.info(String.format("found articles %d ", posts.size()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.debug("There was an exception " + e.getMessage());
-        }
-        return posts;
-    }
-
-    public <T extends Article> void createPostsToWordpressAccordingPostType(List<T> posts, String url) {
+    public <T extends Post> void createPostsToWordpressAccordingPostType(List<T> posts, String url) {
         HttpHeaders headers = getHttpHeaders();
 
         RestTemplate restTemplate = new RestTemplate();
@@ -330,8 +216,8 @@ public class RestClientService {
                     .filter(postMultiEnnoima ->
                             isEnnoimaEquals(postSingleEnnoima, postMultiEnnoima))
                     .findFirst()
-                    .ifPresentOrElse(post1 -> posts.add(new Post(postSingleEnnoima.getId(), post1.getDate(), post1.getTitle(), postSingleEnnoima.getEnnoima(), post1.getVideoLink()
-                                    , ReadJSONService.getTextIfEmptyOrNull(post1.getIdees1()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees2()),
+                    .ifPresentOrElse(post1 -> posts.add(new Post(postSingleEnnoima.getId(), post1.getDate(), post1.getTitle(), postSingleEnnoima.getEnnoima(),
+                                    ReadJSONService.getTextIfEmptyOrNull(post1.getIdees1()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees2()),
                                     ReadJSONService.getTextIfEmptyOrNull(post1.getIdees3()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees4()),
                                     ReadJSONService.getTextIfEmptyOrNull(post1.getIdees5()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees6()),
                                     ReadJSONService.getTextIfEmptyOrNull(post1.getIdees7()), ReadJSONService.getTextIfEmptyOrNull(post1.getIdees8()),
@@ -376,10 +262,10 @@ public class RestClientService {
                         ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees9()) + ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees10())));
     }
 
-    public List<Post> createVideoToUpdateVideoLink(List<WPPostDTO> wpPosts) {
+    public List<Video> createVideoToUpdateVideoLink(List<Video> wpPosts) {
         return wpPosts.stream()
                 .filter(wpPostDTO -> StringUtils.startsWith(wpPostDTO.getVideoLink(), "//"))
-                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink()))
+                .map(wpPostDTO -> new Video(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle(), "https:" + wpPostDTO.getVideoLink()))
                 .collect(Collectors.toList());
     }
 
@@ -404,7 +290,7 @@ public class RestClientService {
                         restTemplate.postForObject(url, request, String.class);
                 JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
-                logger.info("Article updated: " + root);
+                logger.info("Post updated: " + root);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -464,13 +350,13 @@ public class RestClientService {
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request =
-                        new HttpEntity<>("{\"video_link\":\"" + post.getVideoLink() + "\"}", headers);
+                        new HttpEntity<>("{\"video_link1111\":\"" + post.getAge() + "\"}", headers);
 
                 String postResultAsJsonStr =
                         restTemplate.postForObject(url, request, String.class);
                 JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
-                logger.info("Article created: " + root);
+                logger.info("Post created: " + root);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -516,7 +402,7 @@ public class RestClientService {
                         restTemplate.postForObject(url, request, String.class);
                 JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
-                logger.info("Article created: " + root);
+                logger.info("Post created: " + root);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -528,11 +414,10 @@ public class RestClientService {
 
     }
 
-    public List<Post> createPostsFromWpPostDTOJsonObjectList(List<WPPostDTO> wpPostDTOS) {
+    public List<Post> createPostsFromWpPostDTOJsonObjectList(List<Post> wpPostDTOS) {
         return wpPostDTOS.stream()
 //                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(), "https:" + wpPostDTO.getVideoLink(), wpPostDTO.getEnnoima()))
-                .map(wpPostDTO -> new Post(BigInteger.valueOf(wpPostDTO.getId()), wpPostDTO.getDate(), wpPostDTO.getTitle().getRendered(),
-                        null,
+                .map(wpPostDTO -> new Post(wpPostDTO.getId(), wpPostDTO.getDate(), wpPostDTO.getTitle(),
                         null,
                         wpPostDTO.getIdees1(),
                         wpPostDTO.getIdees2(),

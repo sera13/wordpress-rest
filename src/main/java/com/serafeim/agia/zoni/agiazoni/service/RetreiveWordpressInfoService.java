@@ -1,8 +1,8 @@
 package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.serafeim.agia.zoni.agiazoni.model.Media;
-import com.serafeim.agia.zoni.agiazoni.model.WPPostDTO;
-import com.serafeim.agia.zoni.agiazoni.model.WPTaxonomyDTO;
+import com.serafeim.agia.zoni.agiazoni.model.Post;
+import com.serafeim.agia.zoni.agiazoni.model.Taxonomy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +20,13 @@ public class RetreiveWordpressInfoService {
 
     Logger logger = LoggerFactory.getLogger(RetreiveWordpressInfoService.class);
 
-    public List<WPTaxonomyDTO> getWPTaxonomy(String kindOfTaxonomy) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public List<Taxonomy> getWPTaxonomy(String kindOfTaxonomy) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
         RestTemplate restTemplate = RestClientUtil.restTemplate();
-        List<WPTaxonomyDTO> posts = new ArrayList<>();
+        List<Taxonomy> posts = new ArrayList<>();
         int index = 1;
         while (true) {
-            WPTaxonomyDTO[] partialPosts = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/"+ kindOfTaxonomy + "?per_page=100&page=" + index, WPTaxonomyDTO[].class);
+            Taxonomy[] partialPosts = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/"+ kindOfTaxonomy + "?per_page=100&page=" + index, Taxonomy[].class);
             assert partialPosts != null;
             if (partialPosts.length > 0) {
                 posts.addAll(List.of(partialPosts));
@@ -43,9 +43,9 @@ public class RetreiveWordpressInfoService {
         return posts;
     }
 
-    public List<WPPostDTO> getWPPost(String type, String excludeCategories) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public List<Post> getWPPost(String type, String excludeCategories) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         RestTemplate restTemplate = RestClientUtil.restTemplate();
-        List<WPPostDTO> posts = new ArrayList<>();
+        List<Post> posts = new ArrayList<>();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
                 .append(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/")
@@ -53,8 +53,7 @@ public class RetreiveWordpressInfoService {
                 .append(!StringUtils.isEmpty(excludeCategories) ? "?categories_exclude=" + excludeCategories + "&per_page=100&page=" : "?per_page=100&page=");
         int index = 1;
         while (true) {
-            WPPostDTO[] partialPosts = restTemplate.getForObject(stringBuilder.toString() + index, WPPostDTO[].class);
-//            WPPostDTO[] partialPosts = restTemplate.getForObject("http://localhost:8081/wp-json/wp/v2/" + type + "?categories=9629&per_page=100&page=" + index, WPPostDTO[].class);
+            Post[] partialPosts = restTemplate.getForObject(stringBuilder.toString() + index, Post[].class);
             assert partialPosts != null;
             if (partialPosts.length > 0) {
                 posts.addAll(List.of(partialPosts));
@@ -69,10 +68,6 @@ public class RetreiveWordpressInfoService {
         }
 
         return posts;
-    }
-
-    public List<WPPostDTO> getWPPost(String type) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return getWPPost(type, null);
     }
 
     public List<Media> getAllMedia() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {

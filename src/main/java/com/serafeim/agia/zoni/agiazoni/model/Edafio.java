@@ -1,10 +1,12 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
-public class Edafio {
-    // The following fields are for edafio type post
-    public String date;
-    public String status;
-    public String title;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Edafio extends Post {
+
     public String contentid;
     public String bookid;
     public String book;
@@ -18,14 +20,6 @@ public class Edafio {
 
 
     public Edafio() {
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
     }
 
     public String getStatus() {

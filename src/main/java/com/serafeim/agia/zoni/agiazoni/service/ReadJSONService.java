@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.*;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,11 +22,11 @@ import java.util.regex.Pattern;
 
 @Service
 public class ReadJSONService {
-
+    Logger logger = LoggerFactory.getLogger(ReadJSONService.class);
     public static final String YOUTUBE_COM_EMBED_OLD = "www.youtube.com/embed";
     public static final String YOUTUBE_COM_EMBED_NEW = "youtu.be";
 
-    public void createTaxonomyJsonFiles(String filename) {
+    public void createTaxonomyJsonFilesFromJsonFile(String filename) {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
@@ -65,12 +69,12 @@ public class ReadJSONService {
         createJsonFile(articleSources, "articleSources.json");
     }
 
-    public void createArticlesJsonFile(String fromFile, String toFile) {
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
-        Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
-        Map<String, Integer> articleAuthors = createTaxonomyMap("wordpress_article_authors.json");
-        Map<String, Integer> articleSources = createTaxonomyMap("wordpress_sources.json");
+    public void createArticlesJsonFileFromJsonFile(String fromFile, String toFile) {
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> tags = createTaxonomyMapFromJson("wordpress_tags.json");
+        Map<String, Integer> categories = createTaxonomyMapFromJson("wordpress_categories.json");
+        Map<String, Integer> articleAuthors = createTaxonomyMapFromJson("wordpress_article_authors.json");
+        Map<String, Integer> articleSources = createTaxonomyMapFromJson("wordpress_sources.json");
 
 
         try {
@@ -78,7 +82,7 @@ public class ReadJSONService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("title").asText());
@@ -133,7 +137,7 @@ public class ReadJSONService {
         createJsonFile(articles, toFile);
     }
 
-    public Set<Source> createSourcesEpikaitotita() {
+    public Set<Source> createSourcesEpikaitotitaFromJsonFile() {
         Set<Source> epikairotitaSources = new TreeSet<>();
 
         try {
@@ -163,11 +167,11 @@ public class ReadJSONService {
         return epikairotitaSources;
     }
 
-    public List<Article> createEpikaitotitaPosts() {
+    public List<Post> createEpikaitotitaPostsFromJsonFile() {
 
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> epikairotitaSources = createTaxonomyMap("wordpress_sources.json");
-        Map<String, Integer> epikairotitaMedia = createTaxonomyMapMedia("wordpress_media.json");
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> epikairotitaSources = createTaxonomyMapFromJson("wordpress_sources.json");
+        Map<String, Integer> epikairotitaMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
 
         try {
@@ -175,7 +179,7 @@ public class ReadJSONService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("title").asText());
@@ -208,17 +212,17 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Article> createParemvaseisPosts() {
+    public List<Post> createParemvaseisPostsFromJsonFile() {
 
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> paremvaseisMedia = createTaxonomyMapMedia("wordpress_media.json");
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> paremvaseisMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("paremvaseis.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("title").asText());
@@ -245,52 +249,22 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Edafio> createEdafiaPosts() {
-        List<Edafio> edafiaList = new ArrayList();
-
-        try {
-            Reader reader = Files.newBufferedReader(Paths.get("ag_content.json"));
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode parser = mapper.readTree(reader);
-            for (JsonNode jsonNode : parser) {
-                Edafio edafio = new Edafio();
-
-                edafio.setStatus("private");
-                edafio.setTitle(jsonNode.path("contentID").asText());
-                edafio.setContentid(jsonNode.path("contentID").asText());
-                edafio.setBookid(jsonNode.path("bookID").asText());
-                edafio.setBook(jsonNode.path("book").asText());
-                edafio.setArxaio(jsonNode.path("arxaio").asText());
-                edafio.setMetafrasi(jsonNode.path("metafrasi").asText());
-                edafio.setKef(jsonNode.path("kef").asText());
-                edafio.setEdafio(jsonNode.path("edafio").asText());
-                edafio.setPart(jsonNode.path("part").asText());
-                edafio.setAgbookname(jsonNode.path("ag_bookname").asText());
-                edafio.setAgcategory(jsonNode.path("cat").asText());
-
-                edafiaList.add(edafio);
-            }
-
-
-            reader.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    public List<Edafio> createEdafiaPostsFileFromJsonFile(String fileName) {
+        List<Edafio> edafiaList = getPostsAccordingToTypeFromJsonFile(fileName, Edafio.class);
         createJsonFile(edafiaList, "edaiaProduction.json");
         return edafiaList;
     }
 
-    public List<Article> createSynaxaristisPosts() {
+    public List<Post> createSynaxaristisPostsFromJson() {
 
-        List<Article> articles = new ArrayList();
+        List<Post> articles = new ArrayList();
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("synaxaristis.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("introtext").asText());
@@ -322,10 +296,10 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Video> createVideoJsonFile(String fromFile, String toFile) {
+    public List<Video> createVideoJsonFileFromJson(String fromFile, String toFile) {
 
         List<Video> videoList = new ArrayList();
-        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
 
         try {
@@ -364,10 +338,10 @@ public class ReadJSONService {
         return videoList;
     }
 
-    public List<Sound> createSoundJsonFile(String fromFile, String toFile) {
+    public List<Sound> createSoundJsonFileFromJson(String fromFile, String toFile) {
 
         List<Sound> soundList = new ArrayList();
-        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get(fromFile));
@@ -495,7 +469,7 @@ public class ReadJSONService {
         return taxonomiesIds;
     }
 
-    private Map<String, Integer> createTaxonomyMap(String filename) {
+    private Map<String, Integer> createTaxonomyMapFromJson(String filename) {
         Map<String, Integer> result = new HashMap();
 
         try {
@@ -516,7 +490,7 @@ public class ReadJSONService {
         return result;
     }
 
-    private Map<String, Integer> createTaxonomyMapMedia(String filename) {
+    private Map<String, Integer> createTaxonomyMapMediaFromJsonFile(String filename) {
         Map<String, Integer> result = new HashMap();
 
         try {
@@ -596,9 +570,9 @@ public class ReadJSONService {
         return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 
-    public List<Photo> createPhotoJsonFile(String fromFile, String toFile) {
+    public List<Photo> createPhotoJsonFileFromJsonFile(String fromFile, String toFile) {
         List<Photo> photoList = new ArrayList();
-        Map<String, Integer> mapMedia = createTaxonomyMapMedia("wordpress_media.json");
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
 
         try {
@@ -628,6 +602,50 @@ public class ReadJSONService {
         createJsonFile(photoList, toFile);
 
         return photoList;
+    }
+
+    public List<Taxonomy> createTaxonomyFromJsonFile(String filename) {
+        Taxonomy[] taxonomies = new ArticleAuthor[0];
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            taxonomies = mapper.readValue(jsonFileStream, ArticleAuthor[].class);
+
+            logger.info(String.format("found taxonomies %d ", taxonomies.length));
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return Arrays.asList(taxonomies);
+    }
+
+    //TODO fix the raw types
+    public <T extends Post> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
+        List posts = new ArrayList();
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            if (clazz.getDeclaredConstructor().newInstance() instanceof Video) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Video[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Sound) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Sound[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Photo) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Photo[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Edafio) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Edafio[].class));
+            } else {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Post[].class));
+            }
+
+            logger.info(String.format("found posts %d of type %s ", posts.size(), clazz.getName()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return posts;
     }
 }
 

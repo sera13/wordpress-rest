@@ -1,10 +1,12 @@
 package com.serafeim.agia.zoni.agiazoni.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class Sound extends Article{
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Sound extends Post{
     public Integer file;
     public String soundLink;
     public Integer imagePreview;
