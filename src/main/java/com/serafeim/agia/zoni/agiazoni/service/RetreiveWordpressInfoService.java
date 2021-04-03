@@ -6,28 +6,27 @@ import com.serafeim.agia.zoni.agiazoni.model.WPTaxonomyDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class RetreiveWordpressInfoService {
 
-    public static final String WEBSITE_URL = "http://serafeimkourlos.xyz/wp-json/wp/v2/";
-    public static final String USERNAME = "serafeim";
-    public static final String PASSWORD = "NFBN57Z8sVXs!a1N(IsFMdT(";
     Logger logger = LoggerFactory.getLogger(RetreiveWordpressInfoService.class);
 
-    public List<WPTaxonomyDTO> getWPTaxonomy(String kindOfTaxonomy) {
+    public List<WPTaxonomyDTO> getWPTaxonomy(String kindOfTaxonomy) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
-        RestTemplate restTemplate = new RestTemplateBuilder().basicAuthentication(USERNAME, PASSWORD).build();
+        RestTemplate restTemplate = RestClientUtil.restTemplate();
         List<WPTaxonomyDTO> posts = new ArrayList<>();
         int index = 1;
         while (true) {
-            WPTaxonomyDTO[] partialPosts = restTemplate.getForObject(WEBSITE_URL + kindOfTaxonomy + "?per_page=100&page=" + index, WPTaxonomyDTO[].class);
+            WPTaxonomyDTO[] partialPosts = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/"+ kindOfTaxonomy + "?per_page=100&page=" + index, WPTaxonomyDTO[].class);
             assert partialPosts != null;
             if (partialPosts.length > 0) {
                 posts.addAll(List.of(partialPosts));
@@ -44,12 +43,12 @@ public class RetreiveWordpressInfoService {
         return posts;
     }
 
-    public List<WPPostDTO> getWPPost(String type, String excludeCategories) {
-        RestTemplate restTemplate = new RestTemplateBuilder().basicAuthentication(USERNAME, PASSWORD).build();
+    public List<WPPostDTO> getWPPost(String type, String excludeCategories) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        RestTemplate restTemplate = RestClientUtil.restTemplate();
         List<WPPostDTO> posts = new ArrayList<>();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
-                .append(WEBSITE_URL)
+                .append(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/")
                 .append(type)
                 .append(!StringUtils.isEmpty(excludeCategories) ? "?categories_exclude=" + excludeCategories + "&per_page=100&page=" : "?per_page=100&page=");
         int index = 1;
@@ -72,17 +71,17 @@ public class RetreiveWordpressInfoService {
         return posts;
     }
 
-    public List<WPPostDTO> getWPPost(String type) {
+    public List<WPPostDTO> getWPPost(String type) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return getWPPost(type, null);
     }
 
-    public List<Media> getAllMedia() {
+    public List<Media> getAllMedia() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
-        RestTemplate restTemplate = new RestTemplateBuilder().basicAuthentication(USERNAME, PASSWORD).build();
+        RestTemplate restTemplate = RestClientUtil.restTemplate();
         List<Media> mediaList = new ArrayList<>();
         int index = 1;
         while (true) {
-            Media[] partialMedia = restTemplate.getForObject(WEBSITE_URL + "media?media_type=image&per_page=100&page=" + index, Media[].class);
+            Media[] partialMedia = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/" + "media?media_type=image&per_page=100&page=" + index, Media[].class);
             assert partialMedia != null;
             if (partialMedia.length > 0) {
                 mediaList.addAll(List.of(partialMedia));

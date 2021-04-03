@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 
@@ -42,7 +45,7 @@ public class AgiaZoniController {
     }
 
     @GetMapping("/createPostWordpressJsonFiles")
-    public String createPostWordpressJsonFiles(@RequestParam String postType, @RequestParam String filename) {
+    public String createPostWordpressJsonFiles(@RequestParam String postType, @RequestParam String filename) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         List<WPPostDTO> wpPostDTOS = retreiveWordpressInfoService.getWPPost(postType, "9625,9626,9629,9676");
         readJSONService.createJsonFile(wpPostDTOS, "wordpress_" + postType + ".json");
         List<Post> posts = restClientService.createPostsFromWpPostDTOJsonObjectList(wpPostDTOS);
@@ -77,6 +80,16 @@ public class AgiaZoniController {
         return String.format("createUpdatePostsEnnoima called  postsOneEnnoima: %s postsMultipleEnnoima: %s posts: %s", postsOneEnnoima.size(), postsMultiEnnoima.size(), posts.size());
     }
 
+    @GetMapping("/createUpdateAuthors")
+    public String createUpdateAuthors(@RequestParam String authorsOldSiteFile, @RequestParam String authorsWordpressFile) {
+        List<Taxonomy> authorsOldSite = restClientService.createTaxonomyFromJsonFile(authorsOldSiteFile);
+        List<Taxonomy> authorsNewSite = restClientService.createTaxonomyFromJsonFile(authorsWordpressFile);
+        List<Taxonomy> authorsFinal = restClientService.createPostToUpdateTaxonomy(authorsOldSite, authorsNewSite);
+        readJSONService.createJsonFile(authorsFinal, "finalAuthors.json");
+
+        return String.format("createUpdateAuthors called  authorsOldSite: %s authorsWordpress: %s authorsFinal: %s", authorsOldSite.size(), authorsNewSite.size(), authorsFinal.size());
+    }
+
     @GetMapping("/createUpdateVideoLink")
     public String createUpdateVideoLink(@RequestParam String wppostfile) {
         List<WPPostDTO> wpPosts = restClientService.createWPPostsFromJsonFile(wppostfile);
@@ -108,6 +121,13 @@ public class AgiaZoniController {
 
         return "updatePostsDate called " + posts.size();
     }
+    @GetMapping("/updateArticleAuthor")
+    public String updateArticleAuthor(@RequestParam String fromFile) {
+        List<Taxonomy> articleAuthors = restClientService.createTaxonomyFromJsonFile(fromFile);
+        restClientService.updateTaxonomyAuthor(articleAuthors);
+
+        return "updatePostsDate called " + articleAuthors.size();
+    }
 
 
     @GetMapping("/createArticlesJsonFile")
@@ -117,7 +137,7 @@ public class AgiaZoniController {
     }
 
     @GetMapping("/getAllMedia")
-    public String getAllMedia() {
+    public String getAllMedia() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         List<Media> mediaList = retreiveWordpressInfoService.getAllMedia();
         readJSONService.createJsonFile(mediaList, "wordpress_media.json");
         return "getAllMedia called " + mediaList.size();

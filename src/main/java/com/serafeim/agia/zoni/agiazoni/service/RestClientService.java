@@ -5,22 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serafeim.agia.zoni.agiazoni.model.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -32,15 +24,17 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.serafeim.agia.zoni.agiazoni.service.RestClientUtil.getHttpHeaders;
+
 @Service
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
+
 
     // Depricate this for this createPostsAccordingToTypeFromJsonFile if it works!!
     @Deprecated
@@ -118,14 +112,6 @@ public class RestClientService {
         }
     }
 
-    private HttpHeaders getHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-//      headers.setBasicAuth("serafeim", "NFBN57Z8sVXs!a1N(IsFMdT(");
-        headers.setBasicAuth("serafeim", "8rxc OXTR KUvH a8Jw kUHr OqG3");
-        return headers;
-    }
-
 
     public void createArticles(List<Article> articles) throws JsonProcessingException {
         HttpHeaders headers = getHttpHeaders();
@@ -170,6 +156,22 @@ public class RestClientService {
             logger.debug("There was an exception " + e.getMessage());
         }
         return Arrays.asList(posts);
+    }
+
+    public List<Taxonomy> createTaxonomyFromJsonFile(String filename) {
+        Taxonomy[] taxonomies = new ArticleAuthor[0];
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            taxonomies = mapper.readValue(jsonFileStream, ArticleAuthor[].class);
+
+            logger.info(String.format("found taxonomies %d ", taxonomies.length));
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return Arrays.asList(taxonomies);
     }
 
     public List<WPPostDTO> createWPPostsFromJsonFile(String wpPostFile) {
@@ -287,7 +289,7 @@ public class RestClientService {
                             (StringUtils.deleteWhitespace(wpPostDTO1.getTitle()).equals(StringUtils.deleteWhitespace(post.getTitle()))
                                     ||
                                     isEnnoimaAllFieldsEquals(post, wpPostDTO1))
-                            && StringUtils.isNotEmpty(post.getAge())
+                                    && StringUtils.isNotEmpty(post.getAge())
                     )
                     .findFirst()
                     .ifPresent(wpPostDTO1 -> posts.add(new Post(wpPostDTO1.getId(), post.getDate(), wpPostDTO1.getTitle(), post.getAge())));
@@ -317,7 +319,7 @@ public class RestClientService {
     }
 
     private boolean isEqualsWithNoSpace(String str1, String str2) {
-        return StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str1)  && StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
+        return StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str1) && StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
     }
 
     public List<Post> createPostToupdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
@@ -344,6 +346,26 @@ public class RestClientService {
 
     }
 
+    //TODO make this general and not only for authors
+    public List<Taxonomy> createPostToUpdateTaxonomy(List<Taxonomy> taxonomiesOldSite, List<Taxonomy> taxonomiesNewSite) {
+        List<Taxonomy> taxonomies = new ArrayList<>();
+
+        for (Taxonomy taxonomy : taxonomiesOldSite) {
+            taxonomiesNewSite.stream()
+                    .filter(taxonomy1 ->
+                            StringUtils.deleteWhitespace(taxonomy.getName()).equalsIgnoreCase(StringUtils.deleteWhitespace(taxonomy1.getName())))
+                    .findFirst()
+                    .ifPresentOrElse(taxonomy1 -> taxonomies.add(new ArticleAuthor(taxonomy1.getId(), taxonomy1.getDescription(), taxonomy1.getName(), taxonomy1.getSlug(), taxonomy.getOldWebisteId(), taxonomy.getProfession())),
+                            () -> {
+                                // Its not matching
+                                logger.error(String.format("Taxonomy with id %s and name %s did not found", taxonomy.getId(), taxonomy.getName()));
+                            });
+        }
+
+        return taxonomies;
+
+    }
+
     private boolean isEnnoimaEquals(Post postSingleEnnoima, Post postMultiEnnoima) {
         return StringUtils.deleteWhitespace(postSingleEnnoima.getEnnoima())
                 .equals(StringUtils.deleteWhitespace(ReadJSONService.getTextIfEmptyOrNull(postMultiEnnoima.getIdees1()) +
@@ -367,7 +389,7 @@ public class RestClientService {
         URI url;
         try {
 
-            RestTemplate restTemplate = restTemplate();
+            RestTemplate restTemplate = RestClientUtil.restTemplate();
             restTemplate.getMessageConverters()
                     .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
@@ -383,6 +405,39 @@ public class RestClientService {
                 JsonNode root = objectMapper.readTree(postResultAsJsonStr);
 
                 logger.info("Article updated: " + root);
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+
+            logger.debug("Error in the uri " + e.getMessage());
+        } catch (JsonProcessingException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void updateTaxonomyAuthor(List<Taxonomy> taxonomies) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI url;
+        try {
+
+            RestTemplate restTemplate = RestClientUtil.restTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            for (Taxonomy articleAuthor : taxonomies) {
+                url = new URI(RestClientUtil.WEBSITE_URL_PRODUCTION + "/wp-json/wp/v2/article_authors/" + articleAuthor.getId());
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"author_title\":\"" + articleAuthor.getProfession() + "\",\"old_webiste\":\"" + articleAuthor.getOldWebisteId() + "\"}", headers);
+
+                String postResultAsJsonStr =
+                        restTemplate.postForObject(url, request, String.class);
+                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+                logger.info("ArticleAuthor updated: " + root);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -493,25 +548,5 @@ public class RestClientService {
                 .collect(Collectors.toList());
     }
 
-    @Bean
-    public RestTemplate restTemplate()
-            throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
-        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 
-        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-                .loadTrustMaterial(null, acceptingTrustStrategy)
-                .build();
-
-        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
-
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setSSLSocketFactory(csf)
-                .build();
-
-        HttpComponentsClientHttpRequestFactory requestFactory =
-                new HttpComponentsClientHttpRequestFactory();
-
-        requestFactory.setHttpClient(httpClient);
-        return new RestTemplate(requestFactory);
-    }
 }

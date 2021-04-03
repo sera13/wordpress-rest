@@ -6,6 +6,12 @@ public class Taxonomy implements Comparable<Taxonomy> {
     String name;
     String slug;
     String meta;
+    String profession;
+    String oldWebisteId;
+
+
+    public Taxonomy() {
+    }
 
     public Taxonomy(String description, String name, String slug) {
         this.description = description;
@@ -13,6 +19,7 @@ public class Taxonomy implements Comparable<Taxonomy> {
         this.slug = slug;
         this.meta = null;
     }
+
 
     public String getDescription() {
         return description;
@@ -52,6 +59,22 @@ public class Taxonomy implements Comparable<Taxonomy> {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getProfession() {
+        return profession;
+    }
+
+    public void setProfession(String profession) {
+        this.profession = profession;
+    }
+
+    public String getOldWebisteId() {
+        return oldWebisteId;
+    }
+
+    public void setOldWebisteId(String oldWebisteId) {
+        this.oldWebisteId = oldWebisteId;
     }
 
     @Override
