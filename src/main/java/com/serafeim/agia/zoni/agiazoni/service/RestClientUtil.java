@@ -21,6 +21,12 @@ public class RestClientUtil {
     public static final String WEBSITE_URL_LOCAL = "http://localhost:8081";
     public static final String WEBSITE_URL_PRODUCTION = "https://agiazoni.gr";
     public static final String WEBSITE_URL_SERAFEIMKOURLOS = "https://serafeimkourlos.xyz";
+    public static final String VIDEOS_ENDPOINT = "/wp-json/wp/v2/video_posts/";
+    public static final String SOUNDS_ENDPOINT = "/wp-json/wp/v2/sound_posts/";
+    public static final String PHOTOS_ENDPOINT = "/wp-json/wp/v2/photo_posts/";
+    public static final String POSTS_ENDPOINT = "/wp-json/wp/v2/posts/";
+    public static final String EDAFIA_ENDPOINT = "/wp-json/wp/v2/edafio/";
+    public static final String ARTICLE_AUTHORS_ENDPOINT = "/wp-json/wp/v2/article_authors/";
 
 
     public static HttpHeaders getHttpHeaders() {

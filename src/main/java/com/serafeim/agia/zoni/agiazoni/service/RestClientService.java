@@ -3,7 +3,10 @@ package com.serafeim.agia.zoni.agiazoni.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.*;
+import com.serafeim.agia.zoni.agiazoni.model.ArticleAuthor;
+import com.serafeim.agia.zoni.agiazoni.model.Post;
+import com.serafeim.agia.zoni.agiazoni.model.Taxonomy;
+import com.serafeim.agia.zoni.agiazoni.model.Video;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,119 +32,6 @@ import static com.serafeim.agia.zoni.agiazoni.service.RestClientUtil.getHttpHead
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
 
-    public void createEdafia(List<Edafio> edafia) {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url = null;
-        try {
-            url = new URI("http://localhost:8081/wp-json/wp/v2/edafio");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        }
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-        for (Edafio edafio : edafia) {
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity<String> request =
-                    null;
-            try {
-                request = new HttpEntity<>(objectMapper.writeValueAsString(edafio), headers);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-
-            String articleResultAsJsonStr =
-                    restTemplate.postForObject(url, request, String.class);
-            JsonNode root = null;
-            try {
-                root = objectMapper.readTree(articleResultAsJsonStr);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                logger.error("Edafio not created: " + e.getMessage());
-                continue;
-            }
-
-            logger.info("Edafio created: " + root);
-        }
-    }
-
-
-    public void createArticles(List<Post> articles) throws JsonProcessingException {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url = null;
-        try {
-            url = new URI("https://localhost:8081/wp-json/wp/v2/posts");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        }
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-        for (Post article : articles) {
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity<String> request =
-                    new HttpEntity<>(objectMapper.writeValueAsString(article), headers);
-
-            String articleResultAsJsonStr =
-                    restTemplate.postForObject(url, request, String.class);
-            JsonNode root = objectMapper.readTree(articleResultAsJsonStr);
-
-            logger.info("Post created: " + root);
-        }
-    }
-
-
-    public void updateEdafiaPost(List<Post> posts) {
-        HttpHeaders headers = getHttpHeaders();
-
-        String url = "http://localhost:8081/wp-json/wp/v2/edafia/";
-
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-        for (Post post : posts) {
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            HttpEntity<String> request = new HttpEntity<>("{\"status\":\"publish\"}", headers);
-
-        }
-    }
-
-    public void createPosts(List<Post> posts, String url) {
-        HttpHeaders headers = getHttpHeaders();
-
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-        for (Post post : posts) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(post), headers);
-
-                String jsonNode =
-                        restTemplate.postForObject(url, request, String.class);
-                JsonNode root = objectMapper.readTree(jsonNode);
-                logger.debug(String.format("Post of type %s created: " + root, post.getClass().getName()));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                logger.error("Post not created: " + e.getMessage());
-            }
-
-        }
-    }
-
     public <T extends Post> void createPostsToWordpressAccordingPostType(List<T> posts, String url) {
         HttpHeaders headers = getHttpHeaders();
 
@@ -166,7 +56,134 @@ public class RestClientService {
         }
     }
 
-    public List<Post> createPostToupdatePostsDate(List<Post> wpPosts, List<Post> wpPostDTOS) {
+    public void updateSpecificField(URI uri, HttpEntity<String> request) {
+
+        try {
+            RestTemplate restTemplate = RestClientUtil.restTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String postResultAsJsonStr =
+                    restTemplate.postForObject(uri, request, String.class);
+            JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+            logger.info("Post updated: " + root);
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public void updatePostsDate(List<Post> posts, String url) {
+        HttpHeaders headers = getHttpHeaders();
+        URI uri;
+        try {
+
+            for (Post post : posts) {
+                uri = new URI(url + post.getId());
+
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"fields\": {\"xronos_ekdosis\":\"" + post.getAge() + "\"}}", headers);
+
+                updateSpecificField(uri,request);
+
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateTaxonomyAuthor(List<Taxonomy> taxonomies, String url) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI uri;
+        try {
+
+            for (Taxonomy articleAuthor : taxonomies) {
+                uri = new URI(url + articleAuthor.getId());
+
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"author_title\":\"" + articleAuthor.getProfession() + "\",\"old_webiste\":\"" + articleAuthor.getOldWebisteId() + "\"}", headers);
+
+                updateSpecificField(uri, request);
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            logger.debug("Error in the uri " + e.getMessage());
+        }
+    }
+
+    public void updateVideoLinks(List<Post> posts, String url) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI uri;
+        try {
+
+            for (Post post : posts) {
+                uri = new URI(url + post.getId());
+
+                HttpEntity<String> request =
+                        new HttpEntity<>("{\"test\":\"" + post.getAge() + "\"}", headers);
+                     updateSpecificField(uri, request);
+
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            logger.debug("Error in the uri " + e.getMessage());
+        }
+
+    }
+
+    public void updateEnnoima(List<Post> posts, String url) {
+        HttpHeaders headers = getHttpHeaders();
+
+        URI uri;
+        try {
+
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters()
+                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            for (Post post : posts) {
+                uri = new URI(url + post.getId());
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                Post postRequest = new Post();
+                postRequest.setIdees1(StringUtils.isEmpty(post.getIdees1()) ? null : post.getIdees1().trim());
+                postRequest.setIdees2(StringUtils.isEmpty(post.getIdees2()) ? null : post.getIdees2().trim());
+                postRequest.setIdees3(StringUtils.isEmpty(post.getIdees3()) ? null : post.getIdees3().trim());
+                postRequest.setIdees4(StringUtils.isEmpty(post.getIdees4()) ? null : post.getIdees4().trim());
+                postRequest.setIdees5(StringUtils.isEmpty(post.getIdees5()) ? null : post.getIdees5().trim());
+                postRequest.setIdees6(StringUtils.isEmpty(post.getIdees6()) ? null : post.getIdees6().trim());
+                postRequest.setIdees7(StringUtils.isEmpty(post.getIdees7()) ? null : post.getIdees7().trim());
+                postRequest.setIdees8(StringUtils.isEmpty(post.getIdees8()) ? null : post.getIdees8().trim());
+                postRequest.setIdees9(StringUtils.isEmpty(post.getIdees9()) ? null : post.getIdees9().trim());
+                postRequest.setIdees10(StringUtils.isEmpty(post.getIdees10()) ? null : post.getIdees10().trim());
+
+                HttpEntity<Post> request =
+                        new HttpEntity<>(postRequest, headers);
+
+                String postResultAsJsonStr =
+                        restTemplate.postForObject(uri, request, String.class);
+                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
+
+                logger.info("Post created: " + root);
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+
+            logger.debug("Error in the uri " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    public List<Post> createPostToUpdatePostsDate(List<Post> wpPosts, List<Post> wpPostDTOS) {
         List<Post> posts = new ArrayList<>();
 
         for (Post post : wpPosts) {
@@ -208,7 +225,7 @@ public class RestClientService {
         return StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str1) && StringUtils.deleteWhitespace(str1).equals(StringUtils.deleteWhitespace(str2));
     }
 
-    public List<Post> createPostToupdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
+    public List<Post> createPostToUpdatePostsEnnoima(List<Post> postsSingleEnnoima, List<Post> postsMultiEnnoima) {
         List<Post> posts = new ArrayList<>();
 
         for (Post postSingleEnnoima : postsSingleEnnoima) {
@@ -269,150 +286,6 @@ public class RestClientService {
                 .collect(Collectors.toList());
     }
 
-    public void updatePostsDate(List<Post> posts) {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url;
-        try {
-
-            RestTemplate restTemplate = RestClientUtil.restTemplate();
-            restTemplate.getMessageConverters()
-                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-            for (Post post : posts) {
-                url = new URI("https://agiazoni.gr/wp-json/wp/v2/posts/" + post.getId());
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity<String> request =
-                        new HttpEntity<>("{\"fields\": {\"xronos_ekdosis\":\"" + post.getAge() + "\"}}", headers);
-
-                String postResultAsJsonStr =
-                        restTemplate.postForObject(url, request, String.class);
-                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
-
-                logger.info("Post updated: " + root);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        } catch (JsonProcessingException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void updateTaxonomyAuthor(List<Taxonomy> taxonomies) {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url;
-        try {
-
-            RestTemplate restTemplate = RestClientUtil.restTemplate();
-            restTemplate.getMessageConverters()
-                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-            for (Taxonomy articleAuthor : taxonomies) {
-                url = new URI(RestClientUtil.WEBSITE_URL_PRODUCTION + "/wp-json/wp/v2/article_authors/" + articleAuthor.getId());
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity<String> request =
-                        new HttpEntity<>("{\"author_title\":\"" + articleAuthor.getProfession() + "\",\"old_webiste\":\"" + articleAuthor.getOldWebisteId() + "\"}", headers);
-
-                String postResultAsJsonStr =
-                        restTemplate.postForObject(url, request, String.class);
-                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
-
-                logger.info("ArticleAuthor updated: " + root);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        } catch (JsonProcessingException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void updateVideoLinks(List<Post> posts) {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url;
-        try {
-
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getMessageConverters()
-                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-            for (Post post : posts) {
-                url = new URI("http://localhost:8081/wp-json/wp/v2/video_posts/" + post.getId());
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                HttpEntity<String> request =
-                        new HttpEntity<>("{\"video_link1111\":\"" + post.getAge() + "\"}", headers);
-
-                String postResultAsJsonStr =
-                        restTemplate.postForObject(url, request, String.class);
-                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
-
-                logger.info("Post created: " + root);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void updateEnnoima(List<Post> posts) {
-        HttpHeaders headers = getHttpHeaders();
-
-        URI url;
-        try {
-
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getMessageConverters()
-                    .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-            for (Post post : posts) {
-                url = new URI("http://localhost:8081/wp-json/wp/v2/posts/" + post.getId());
-
-                ObjectMapper objectMapper = new ObjectMapper();
-
-                Post postRequest = new Post();
-                postRequest.setIdees1(StringUtils.isEmpty(post.getIdees1()) ? null : post.getIdees1().trim());
-                postRequest.setIdees2(StringUtils.isEmpty(post.getIdees2()) ? null : post.getIdees2().trim());
-                postRequest.setIdees3(StringUtils.isEmpty(post.getIdees3()) ? null : post.getIdees3().trim());
-                postRequest.setIdees4(StringUtils.isEmpty(post.getIdees4()) ? null : post.getIdees4().trim());
-                postRequest.setIdees5(StringUtils.isEmpty(post.getIdees5()) ? null : post.getIdees5().trim());
-                postRequest.setIdees6(StringUtils.isEmpty(post.getIdees6()) ? null : post.getIdees6().trim());
-                postRequest.setIdees7(StringUtils.isEmpty(post.getIdees7()) ? null : post.getIdees7().trim());
-                postRequest.setIdees8(StringUtils.isEmpty(post.getIdees8()) ? null : post.getIdees8().trim());
-                postRequest.setIdees9(StringUtils.isEmpty(post.getIdees9()) ? null : post.getIdees9().trim());
-                postRequest.setIdees10(StringUtils.isEmpty(post.getIdees10()) ? null : post.getIdees10().trim());
-
-                HttpEntity<Post> request =
-                        new HttpEntity<>(postRequest, headers);
-
-                String postResultAsJsonStr =
-                        restTemplate.postForObject(url, request, String.class);
-                JsonNode root = objectMapper.readTree(postResultAsJsonStr);
-
-                logger.info("Post created: " + root);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-
-            logger.debug("Error in the uri " + e.getMessage());
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public List<Post> createPostsFromWpPostDTOJsonObjectList(List<Post> wpPostDTOS) {
         return wpPostDTOS.stream()
