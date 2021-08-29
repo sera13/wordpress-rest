@@ -1,4 +1,4 @@
-package com.serafeim.agia.zoni.agiazoni.model;
+package com.serafeim.agia.zoni.agiazoni.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -40,6 +40,8 @@ public class Post {
     private String idees9;
     private String idees10;
     public String numReadings;
+    String oldWebisteId;
+
 
 
     public Post(){}
@@ -329,5 +331,13 @@ public class Post {
 
     public void setNumReadings(String numReadings) {
         this.numReadings = numReadings;
+    }
+
+    public String getOldWebisteId() {
+        return oldWebisteId;
+    }
+
+    public void setOldWebisteId(String oldWebisteId) {
+        this.oldWebisteId = oldWebisteId;
     }
 }

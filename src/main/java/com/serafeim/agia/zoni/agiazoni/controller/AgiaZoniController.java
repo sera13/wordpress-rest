@@ -1,7 +1,7 @@
 package com.serafeim.agia.zoni.agiazoni.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.serafeim.agia.zoni.agiazoni.model.*;
+import com.serafeim.agia.zoni.agiazoni.dto.*;
 import com.serafeim.agia.zoni.agiazoni.service.ReadJSONService;
 import com.serafeim.agia.zoni.agiazoni.service.RestClientService;
 import com.serafeim.agia.zoni.agiazoni.service.RestClientUtil;
@@ -21,6 +21,8 @@ import java.util.Set;
 public class AgiaZoniController {
 
 
+    public static final int LIMIT = 10;
+    public static final int NOLIMIT = -1;
     @Autowired
     public ReadJSONService readJSONService;
     @Autowired
@@ -124,7 +126,7 @@ public class AgiaZoniController {
     @GetMapping("/updateArticleAuthor")
     public String updateArticleAuthor(@RequestParam String fromFile) {
         List<Taxonomy> articleAuthors = readJSONService.createTaxonomyFromJsonFile(fromFile);
-        restClientService.updateTaxonomyAuthor(articleAuthors, RestClientUtil.WEBSITE_URL_LOCAL  + RestClientUtil.ARTICLE_AUTHORS_ENDPOINT);
+        restClientService.updateTaxonomyAuthor(articleAuthors, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.ARTICLE_AUTHORS_ENDPOINT);
 
         return "updatePostsDate called " + articleAuthors.size();
     }
@@ -164,7 +166,7 @@ public class AgiaZoniController {
     @GetMapping("/createArticlesFromJsonFile")
     public String createArticlesFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
         List<Post> articles = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Post.class);
-        restClientService.createPostsToWordpressAccordingPostType(articles, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(articles, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT, LIMIT);
         return "createArticlesFromJsonFile called " + articles.size();
     }
 
@@ -177,14 +179,14 @@ public class AgiaZoniController {
     @GetMapping("/createEdafiaFromJsonFile")
     public String createEdafiaFromJsonFile(@RequestParam String filename) {
         List edafiaFromJsonFile = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Post.class);
-        restClientService.createPostsToWordpressAccordingPostType(edafiaFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.EDAFIA_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(edafiaFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.EDAFIA_ENDPOINT,LIMIT);
         return "createEdafiaFromJsonFile called " + edafiaFromJsonFile.size();
     }
 
     @GetMapping("/updatePosts")
     public String updatePosts(@RequestParam String filename) {
         List<Post> postsFromJsonFile = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Post.class);
-        restClientService.createPostsToWordpressAccordingPostType(postsFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(postsFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT,LIMIT);
         return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 
@@ -197,7 +199,7 @@ public class AgiaZoniController {
     @GetMapping("/createSynaxaristisFromJsonFile")
     public String createSynaxaristisFromJsonFile(@RequestParam String filename) throws JsonProcessingException {
         List<Post> postsFromJsonFile = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Post.class);
-        restClientService.createPostsToWordpressAccordingPostType(postsFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(postsFromJsonFile, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.POSTS_ENDPOINT,LIMIT);
         return "postsFromJsonFile called " + postsFromJsonFile.size();
     }
 
@@ -210,7 +212,7 @@ public class AgiaZoniController {
     @GetMapping("/createVideoFromJsonFile")
     public String createVideoFromJsonFile(@RequestParam String filename) {
         List<Video> videos = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Video.class);
-        restClientService.createPostsToWordpressAccordingPostType(videos, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.VIDEOS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(videos, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.VIDEOS_ENDPOINT,LIMIT);
         return "create videos called " + videos.size();
     }
 
@@ -223,7 +225,7 @@ public class AgiaZoniController {
     @GetMapping("/createSoundFromJsonFile")
     public String createSoundFromJsonFile(@RequestParam String filename) {
         List<Sound> sounds = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Sound.class);
-        restClientService.createPostsToWordpressAccordingPostType(sounds,RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.SOUNDS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(sounds, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.SOUNDS_ENDPOINT,LIMIT);
         return "createSoundFromJsonFile called " + sounds.size();
     }
 
@@ -237,9 +239,19 @@ public class AgiaZoniController {
     @GetMapping("/createPhotoFromJsonFile")
     public String createPhotoFromJsonFile(@RequestParam String filename) {
         List<Photo> photos = readJSONService.getPostsAccordingToTypeFromJsonFile(filename, Photo.class);
-        restClientService.createPostsToWordpressAccordingPostType(photos, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.PHOTOS_ENDPOINT);
+        restClientService.createPostsToWordpressAccordingPostType(photos, RestClientUtil.WEBSITE_URL_LOCAL + RestClientUtil.PHOTOS_ENDPOINT,LIMIT);
 
         return "createSoundFromJsonFile called " + photos.size();
+    }
+
+    @GetMapping("/createEikonologioFromJsonFile")
+    public String createPhotoFromJsonFile(@RequestParam String fromFile, @RequestParam String toFile) {
+        List<Eikonologio> eikonologioList = readJSONService.getPostsAccordingToTypeFromJsonFile(fromFile, Eikonologio.class);
+
+        List<Photo> photoList = readJSONService.createEikonologioJsonFile(eikonologioList, toFile);
+        restClientService.createPostsToWordpressAccordingPostType(photoList, RestClientUtil.WEBSITE_URL_PRODUCTION + RestClientUtil.PHOTOS_ENDPOINT, NOLIMIT);
+
+        return "create Eikonologio called " + photoList.size();
     }
 
 }

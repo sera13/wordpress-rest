@@ -2,7 +2,7 @@ package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.*;
+import com.serafeim.agia.zoni.agiazoni.dto.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,8 @@ public class ReadJSONService {
     Logger logger = LoggerFactory.getLogger(ReadJSONService.class);
     public static final String YOUTUBE_COM_EMBED_OLD = "www.youtube.com/embed";
     public static final String YOUTUBE_COM_EMBED_NEW = "youtu.be";
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+
 
     public void createTaxonomyJsonFilesFromJsonFile(String filename) {
         Set<Tag> tags = new TreeSet<>();
@@ -357,7 +359,7 @@ public class ReadJSONService {
                 sound.setTitle(jsonNode.path("title").asText());
                 sound.setDate(jsonNode.path("date_published").asText());
                 sound.setEditor(jsonNode.path("txt").asText());
-                sound.setImagePreview(getSingleMediaIdsByName(jsonNode.path("img").asText(),mapMedia));
+                sound.setImagePreview(getSingleMediaIdsByName(jsonNode.path("img").asText(), mapMedia));
                 sound.setNumReadings(jsonNode.path("num_hits").asText());
                 sound.setCommentStatus("closed");
                 sound.setDuration(jsonNode.path("duration").asText());
@@ -433,7 +435,9 @@ public class ReadJSONService {
 
     private Integer getSingleMediaIdsByName(String media, Map<String, Integer> mediaMap) {
         for (String s : mediaMap.keySet()) {
-            if (s.contains(media) || StringUtils.substringBefore(s, ".jpg").contains(StringUtils.substringBefore(media,".jpg"))) {
+            if (s.contains(media) || StringUtils.substringBefore(s, ".jpg").contains(StringUtils.substringBefore(media, ".jpg"))
+                    || StringUtils.substringBefore(s, ".png").contains(StringUtils.substringBefore(media, ".png"))
+                    || StringUtils.substringBefore(s, ".jpeg").contains(StringUtils.substringBefore(media, ".jpeg"))) {
                 return mediaMap.get(s);
             }
         }
@@ -452,7 +456,7 @@ public class ReadJSONService {
     }
 
     public static String getTextIfEmptyOrNull(String text) {
-        return  StringUtils.isEmpty(text) || text.equals("null") ? "" : text + " ";
+        return StringUtils.isEmpty(text) || text.equals("null") ? "" : text + " ";
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
@@ -604,6 +608,33 @@ public class ReadJSONService {
         return photoList;
     }
 
+    public List<Photo> createEikonologioJsonFile(List<Eikonologio> eikonologioList, String toFile) {
+        List<Photo> photoList = new ArrayList<>();
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
+
+        Set<Integer> sectionPhoto = new HashSet<>();
+        sectionPhoto.add(9657);
+
+        for (Eikonologio eikonologio : eikonologioList) {
+            Photo photo = new Photo();
+            photo.setStatus("publish");
+//            photo.setDate(eikonologio.getDate());
+            photo.setDate(formatter.format(Calendar.getInstance().getTime()));
+            photo.setTitle(eikonologio.getText());
+            photo.setPhoto(getSingleMediaIdsByName(eikonologio.getImg(), mapMedia));
+            photo.setEditor(eikonologio.getText());
+            photo.setSectionPhoto(sectionPhoto);
+            photo.setOldWebisteId(eikonologio.getId().toString());
+            photo.setCommentStatus("closed");
+
+            photoList.add(photo);
+        }
+
+        createJsonFile(photoList, toFile);
+
+        return photoList;
+    }
+
     public List<Taxonomy> createTaxonomyFromJsonFile(String filename) {
         Taxonomy[] taxonomies = new ArticleAuthor[0];
         try {
@@ -620,8 +651,7 @@ public class ReadJSONService {
         return Arrays.asList(taxonomies);
     }
 
-    //TODO fix the raw types
-    public <T extends Post> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
+    public <T extends Object> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
         List posts = new ArrayList();
 
         try {
@@ -636,17 +666,23 @@ public class ReadJSONService {
                 posts = Arrays.asList(mapper.readValue(jsonFileStream, Photo[].class));
             } else if (clazz.getDeclaredConstructor().newInstance() instanceof Edafio) {
                 posts = Arrays.asList(mapper.readValue(jsonFileStream, Edafio[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Media) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Media[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Eikonologio) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Eikonologio[].class));
             } else {
                 posts = Arrays.asList(mapper.readValue(jsonFileStream, Post[].class));
             }
 
-            logger.info(String.format("found posts %d of type %s ", posts.size(), clazz.getName()));
+            logger.info(String.format("found %d entries of type %s ", posts.size(), clazz.getName()));
         } catch (Exception e) {
             e.printStackTrace();
             logger.debug("There was an exception " + e.getMessage());
         }
         return posts;
     }
+
+
 }
 
 

@@ -1,8 +1,8 @@
 package com.serafeim.agia.zoni.agiazoni.service;
 
-import com.serafeim.agia.zoni.agiazoni.model.Media;
-import com.serafeim.agia.zoni.agiazoni.model.Post;
-import com.serafeim.agia.zoni.agiazoni.model.Taxonomy;
+import com.serafeim.agia.zoni.agiazoni.dto.Media;
+import com.serafeim.agia.zoni.agiazoni.dto.Post;
+import com.serafeim.agia.zoni.agiazoni.dto.Taxonomy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,8 @@ public class RetreiveWordpressInfoService {
         List<Media> mediaList = new ArrayList<>();
         int index = 1;
         while (true) {
-            Media[] partialMedia = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_SERAFEIMKOURLOS +"/wp-json/wp/v2/" + "media?media_type=image&per_page=100&page=" + index, Media[].class);
+            String dateString = "2021-08-29T00:00:00";
+            Media[] partialMedia = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_PRODUCTION +"/wp-json/wp/v2/" + "media?after=" + dateString + "&media_type=image&per_page=100&page=" + index, Media[].class);
             assert partialMedia != null;
             if (partialMedia.length > 0) {
                 mediaList.addAll(List.of(partialMedia));

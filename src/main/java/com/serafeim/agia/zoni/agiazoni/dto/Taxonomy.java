@@ -1,4 +1,4 @@
-package com.serafeim.agia.zoni.agiazoni.model;
+package com.serafeim.agia.zoni.agiazoni.dto;
 
 public class Taxonomy implements Comparable<Taxonomy> {
     Integer id;

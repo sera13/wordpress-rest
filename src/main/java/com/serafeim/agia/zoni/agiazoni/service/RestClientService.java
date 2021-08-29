@@ -3,10 +3,10 @@ package com.serafeim.agia.zoni.agiazoni.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.ArticleAuthor;
-import com.serafeim.agia.zoni.agiazoni.model.Post;
-import com.serafeim.agia.zoni.agiazoni.model.Taxonomy;
-import com.serafeim.agia.zoni.agiazoni.model.Video;
+import com.serafeim.agia.zoni.agiazoni.dto.ArticleAuthor;
+import com.serafeim.agia.zoni.agiazoni.dto.Post;
+import com.serafeim.agia.zoni.agiazoni.dto.Taxonomy;
+import com.serafeim.agia.zoni.agiazoni.dto.Video;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +32,19 @@ import static com.serafeim.agia.zoni.agiazoni.service.RestClientUtil.getHttpHead
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
 
-    public <T extends Post> void createPostsToWordpressAccordingPostType(List<T> posts, String url) {
+    public <T extends Post> void createPostsToWordpressAccordingPostType(List<T> posts, String url, int limit) {
         HttpHeaders headers = getHttpHeaders();
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
+        int index = 0;
+
         for (T post : posts) {
+            if (index == limit && limit > 0){
+                break;
+            }
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(post), headers);
@@ -48,6 +53,7 @@ public class RestClientService {
                         restTemplate.postForObject(url, request, String.class);
                 JsonNode root = objectMapper.readTree(jsonNode);
                 logger.debug("Post of type created in the web: " + root);
+                index++;
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 logger.error("Post not created: " + e.getMessage());

@@ -1,4 +1,4 @@
-package com.serafeim.agia.zoni.agiazoni.model;
+package com.serafeim.agia.zoni.agiazoni.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
