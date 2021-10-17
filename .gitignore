@@ -33,3 +33,4 @@ build/
 /*.json
 /until_08_11_2020/*
 /until_11_11_2019/*
+/logs/*
