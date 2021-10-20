@@ -18,6 +18,7 @@ target/
 *.iws
 *.iml
 *.ipr
+*.cmd
 
 ### NetBeans ###
 /nbproject/private/
@@ -30,3 +31,6 @@ build/
 ### VS Code ###
 .vscode/
 /*.json
+/until_08_11_2020/*
+/until_11_11_2019/*
+/logs/*

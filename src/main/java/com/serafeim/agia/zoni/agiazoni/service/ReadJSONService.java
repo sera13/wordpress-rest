@@ -2,11 +2,15 @@ package com.serafeim.agia.zoni.agiazoni.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.serafeim.agia.zoni.agiazoni.model.*;
+import com.serafeim.agia.zoni.agiazoni.dto.*;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,15 +22,20 @@ import java.util.regex.Pattern;
 
 @Service
 public class ReadJSONService {
+    Logger logger = LoggerFactory.getLogger(ReadJSONService.class);
+    public static final String YOUTUBE_COM_EMBED_OLD = "www.youtube.com/embed";
+    public static final String YOUTUBE_COM_EMBED_NEW = "youtu.be";
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 
-    public void createTaxonomyJsonFiles() {
+
+    public void createTaxonomyJsonFilesFromJsonFile(String filename) {
         Set<Tag> tags = new TreeSet<>();
         Set<Category> categories = new TreeSet<>();
         Set<ArticleAuthor> articleAuthors = new TreeSet<>();
         Set<Source> articleSources = new TreeSet<>();
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(filename));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
@@ -62,30 +71,28 @@ public class ReadJSONService {
         createJsonFile(articleSources, "articleSources.json");
     }
 
-    public void createArticlesJsonFile() {
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> tags = createTaxonomyMap("wordpress_tags.json");
-        Map<String, Integer> categories = createTaxonomyMap("wordpress_categories.json");
-        Map<String, Integer> articleAuthors = createTaxonomyMap("wordpress_article_authors.json");
-        Map<String, Integer> articleSources = createTaxonomyMap("wordpress_sources.json");
+    public void createArticlesJsonFileFromJsonFile(String fromFile, String toFile) {
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> tags = createTaxonomyMapFromJson("wordpress_tags.json");
+        Map<String, Integer> categories = createTaxonomyMapFromJson("wordpress_categories.json");
+        Map<String, Integer> articleAuthors = createTaxonomyMapFromJson("wordpress_article_authors.json");
+        Map<String, Integer> articleSources = createTaxonomyMapFromJson("wordpress_sources.json");
 
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("articles.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
-//                article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setDate(jsonNode.path("date").asText());
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("maintext").asText());
                 article.setNumReadings(jsonNode.path("numReadings").asText());
                 article.setTemplate("full-width-single-post-az-template.php");
-//                article.setAuthor();
 
 
                 String ennoima = getTextIfEmptyOrNull(jsonNode.path("idees1").asText()) +
@@ -129,12 +136,10 @@ public class ReadJSONService {
             e.printStackTrace();
         }
 
-        createJsonFile(articles, "articlesProduction.json");
-
-
+        createJsonFile(articles, toFile);
     }
 
-    public Set<Source> createSourcesEpikaitotita() {
+    public Set<Source> createSourcesEpikaitotitaFromJsonFile() {
         Set<Source> epikairotitaSources = new TreeSet<>();
 
         try {
@@ -154,7 +159,6 @@ public class ReadJSONService {
                 epikairotitaSources.add(articleSource);
             }
 
-
             reader.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,11 +169,11 @@ public class ReadJSONService {
         return epikairotitaSources;
     }
 
-    public List<Article> createEpikaitotitaPosts() {
+    public List<Post> createEpikaitotitaPostsFromJsonFile() {
 
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> epikairotitaSources = createTaxonomyMap("wordpress_sources.json");
-        Map<String, Integer> epikairotitaMedia = createTaxonomyMapMedia("wordpress_media.json");
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> epikairotitaSources = createTaxonomyMapFromJson("wordpress_sources.json");
+        Map<String, Integer> epikairotitaMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
 
         try {
@@ -177,17 +181,13 @@ public class ReadJSONService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
-//                article.setType("post");
                 article.setTitle(jsonNode.path("title").asText());
                 article.setDate(jsonNode.path("date").asText());
                 article.setExcerpt(jsonNode.path("introtext").asText());
                 article.setContent(jsonNode.path("text").asText());
-//                article.setNumReadings(jsonNode.path("numReadings").asText());
-//                article.setTemplate("full-width-single-post-az-template.php");
-//                article.setAuthor();
 
 
                 Set<Integer> articleSource = getSingleTaxonomyIdsByName(jsonNode.path("source").asText(), epikairotitaSources);
@@ -214,18 +214,17 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Article> createParemvaseisPosts() {
+    public List<Post> createParemvaseisPostsFromJsonFile() {
 
-        List<Article> articles = new ArrayList();
-        Map<String, Integer> paremvaseisMedia = createTaxonomyMapMedia("wordpress_media.json");
-
+        List<Post> articles = new ArrayList();
+        Map<String, Integer> paremvaseisMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("paremvaseis.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("title").asText());
@@ -252,52 +251,22 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Edafio> createEdafiaPosts() {
-        List<Edafio> edafiaList = new ArrayList();
-
-        try {
-            Reader reader = Files.newBufferedReader(Paths.get("ag_content.json"));
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode parser = mapper.readTree(reader);
-            for (JsonNode jsonNode : parser) {
-                Edafio edafio = new Edafio();
-
-                edafio.setStatus("private");
-                edafio.setTitle(jsonNode.path("contentID").asText());
-                edafio.setContentid(jsonNode.path("contentID").asText());
-                edafio.setBookid(jsonNode.path("bookID").asText());
-                edafio.setBook(jsonNode.path("book").asText());
-                edafio.setArxaio(jsonNode.path("arxaio").asText());
-                edafio.setMetafrasi(jsonNode.path("metafrasi").asText());
-                edafio.setKef(jsonNode.path("kef").asText());
-                edafio.setEdafio(jsonNode.path("edafio").asText());
-                edafio.setPart(jsonNode.path("part").asText());
-                edafio.setAgbookname(jsonNode.path("ag_bookname").asText());
-                edafio.setAgcategory(jsonNode.path("cat").asText());
-
-                edafiaList.add(edafio);
-            }
-
-
-            reader.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    public List<Edafio> createEdafiaPostsFileFromJsonFile(String fileName) {
+        List<Edafio> edafiaList = getPostsAccordingToTypeFromJsonFile(fileName, Edafio.class);
         createJsonFile(edafiaList, "edaiaProduction.json");
         return edafiaList;
     }
 
-    public List<Article> createSynaxaristisPosts() {
+    public List<Post> createSynaxaristisPostsFromJson() {
 
-        List<Article> articles = new ArrayList();
+        List<Post> articles = new ArrayList();
 
         try {
             Reader reader = Files.newBufferedReader(Paths.get("synaxaristis.json"));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                Article article = new Article();
+                Post article = new Post();
 
                 article.setStatus("publish");
                 article.setTitle(jsonNode.path("introtext").asText());
@@ -329,27 +298,32 @@ public class ReadJSONService {
         return articles;
     }
 
-    public List<Video> createVideoJsonFile() {
+    public List<Video> createVideoJsonFileFromJson(String fromFile, String toFile) {
 
         List<Video> videoList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
+
 
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("videos.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parser = mapper.readTree(reader);
             for (JsonNode jsonNode : parser) {
-                String extractUrl = extractYoutubeUrl(jsonNode.path("src").asText());
+                String extractUrl = extractEmbedVideoUrl(jsonNode.path("src").asText());
                 if (!StringUtils.isEmpty(extractUrl)) {
                     Video video = new Video();
 
-//                    video.setStatus("publish");
-//                    video.setTitle(jsonNode.path("title").asText());
-//                    video.setDate(jsonNode.path("date_published").asText());
+                    video.setStatus("publish");
+                    video.setTitle(jsonNode.path("title").asText());
+                    video.setDate(jsonNode.path("date_published").asText());
                     video.setEditor(jsonNode.path("txt").asText());
                     video.setVideoLink(extractUrl);
-                    video.setImagePreview(jsonNode.path("img").asText());
-//                    video.setNumReadings(jsonNode.path("num_hits").asText());
-//                    video.setCommentStatus("closed");
+                    if (!StringUtils.isEmpty(jsonNode.path("img").asText())) {
+                        String imagestr = jsonNode.path("img").asText(); //StringUtils.substringBefore(jsonNode.path("img").asText(), ".");
+                        video.setImagePreview(getSingleMediaIdsByName(imagestr, mapMedia));
+                    }
+                    video.setNumReadings(jsonNode.path("num_hits").asText());
+                    video.setCommentStatus("closed");
                     video.setDuration(jsonNode.path("duration").asText());
 
                     videoList.add(video);
@@ -361,24 +335,86 @@ public class ReadJSONService {
             e.printStackTrace();
         }
 
-        createJsonFile(videoList, "videoProduction.json");
+        createJsonFile(videoList, toFile);
 
         return videoList;
     }
 
-    private String extractYoutubeUrl(String src) {
+    public List<Sound> createSoundJsonFileFromJson(String fromFile, String toFile) {
+
+        List<Sound> soundList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+                String file = jsonNode.path("file").asText();
+                String embedCode = jsonNode.path("embed_code").asText();
+
+
+                Sound sound = new Sound();
+                sound.setStatus("publish");
+                sound.setTitle(jsonNode.path("title").asText());
+                sound.setDate(jsonNode.path("date_published").asText());
+                sound.setEditor(jsonNode.path("txt").asText());
+                sound.setImagePreview(getSingleMediaIdsByName(jsonNode.path("img").asText(), mapMedia));
+                sound.setNumReadings(jsonNode.path("num_hits").asText());
+                sound.setCommentStatus("closed");
+                sound.setDuration(jsonNode.path("duration").asText());
+
+
+//               TODO currently we should use the iframe since the soundlinks are not correct
+                if (!StringUtils.isEmpty(embedCode)) {
+//                    String embedCodeUrl = extractEmbedSoundUrl(embedCode);
+//                    sound.setSoundLink(embedCodeUrl);
+                    sound.setIframe(jsonNode.path("embed_code").asText());
+                    soundList.add(sound);
+                } else if (!StringUtils.isEmpty(file)) {
+//                    sound.setFile(file);
+//                    soundList.add(sound);
+                }
+            }
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(soundList, toFile);
+
+        return soundList;
+    }
+
+    private String extractEmbedSoundUrl(String embedCode) {
         String url = null;
 
-        if (StringUtils.contains(src, "youtube")) {  //TODO keep this just to test not youtube videos
-            return null;
-        }
-        if (StringUtils.startsWithIgnoreCase(src,"<iframe")){
+        if (StringUtils.startsWithIgnoreCase(embedCode, "<iframe")) {
 
-            // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
-            Matcher matcher = Pattern.compile("src=\\\\\"([^\"]+)\"").matcher(src);
+            Matcher matcher = Pattern.compile("src=\"([^\"]+)\"").matcher(embedCode);
             boolean found = matcher.find();
             if (found) {
                 url = matcher.group(1);
+            }
+        }
+
+        return url;
+    }
+
+    private String extractEmbedVideoUrl(String src) {
+        String url = null;
+
+        if (StringUtils.startsWithIgnoreCase(src, "<iframe")) {
+
+            Matcher matcher = Pattern.compile("src=\\\\\"([^\"]+)\"").matcher(src);
+            boolean found = matcher.find();
+            if (found) {
+                // when we have https://www.youtube.com/embed/wiVQ9Ik16qI\\ it should become  https://youtu.be/wiVQ9Ik16qI
+                url = matcher.group(1);
+                if (StringUtils.contains(src, YOUTUBE_COM_EMBED_OLD)) {
+                    url = url.replace(YOUTUBE_COM_EMBED_OLD, YOUTUBE_COM_EMBED_NEW);
+                }
             }
         }
 
@@ -399,7 +435,9 @@ public class ReadJSONService {
 
     private Integer getSingleMediaIdsByName(String media, Map<String, Integer> mediaMap) {
         for (String s : mediaMap.keySet()) {
-            if (s.contains(media)) {
+            if (s.contains(media) || StringUtils.substringBefore(s, ".jpg").contains(StringUtils.substringBefore(media, ".jpg"))
+                    || StringUtils.substringBefore(s, ".png").contains(StringUtils.substringBefore(media, ".png"))
+                    || StringUtils.substringBefore(s, ".jpeg").contains(StringUtils.substringBefore(media, ".jpeg"))) {
                 return mediaMap.get(s);
             }
         }
@@ -417,8 +455,8 @@ public class ReadJSONService {
         return new ArticleAuthor(normalizedText, normalizedText, normalizedTextSlug.replaceAll("[\\\\»«()<>0-9+&@#/%?=~'_|!:,.;]", ""));
     }
 
-    private String getTextIfEmptyOrNull(String text) {
-        return text.equals("null") || StringUtils.isEmpty(text) ? "" : text + " ";
+    public static String getTextIfEmptyOrNull(String text) {
+        return StringUtils.isEmpty(text) || text.equals("null") ? "" : text + " ";
     }
 
     private Set<Integer> getTaxonomyIdsByName(String tags, Map<String, Integer> taxonomiesMap) {
@@ -435,7 +473,7 @@ public class ReadJSONService {
         return taxonomiesIds;
     }
 
-    private Map<String, Integer> createTaxonomyMap(String filename) {
+    private Map<String, Integer> createTaxonomyMapFromJson(String filename) {
         Map<String, Integer> result = new HashMap();
 
         try {
@@ -456,7 +494,7 @@ public class ReadJSONService {
         return result;
     }
 
-    private Map<String, Integer> createTaxonomyMapMedia(String filename) {
+    private Map<String, Integer> createTaxonomyMapMediaFromJsonFile(String filename) {
         Map<String, Integer> result = new HashMap();
 
         try {
@@ -535,6 +573,116 @@ public class ReadJSONService {
         Pattern pattern = Pattern.compile("\\p{InCOMBINING_DIACRITICAL_MARKS}+");
         return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
+
+    public List<Photo> createPhotoJsonFileFromJsonFile(String fromFile, String toFile) {
+        List<Photo> photoList = new ArrayList();
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
+
+
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(fromFile));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parser = mapper.readTree(reader);
+            for (JsonNode jsonNode : parser) {
+
+                Photo photo = new Photo();
+                photo.setStatus("publish");
+                photo.setTitle(StringUtils.trim(jsonNode.path("title").asText()));
+                photo.setPhoto(getSingleMediaIdsByName(jsonNode.path("img").asText().replaceAll("[\\\\»«()<>+&@#/%?=~'|!:,.;]", "").trim(), mapMedia));
+                photo.setEditor(StringUtils.trim(jsonNode.path("txt").asText()));
+                photo.setDate(jsonNode.path("date_published").asText());
+                photo.setNumReadings(jsonNode.path("num_hits").asText());
+                photo.setCommentStatus("closed");
+
+                photoList.add(photo);
+
+            }
+
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        createJsonFile(photoList, toFile);
+
+        return photoList;
+    }
+
+    public List<Photo> createEikonologioJsonFile(List<Eikonologio> eikonologioList, String toFile) {
+        List<Photo> photoList = new ArrayList<>();
+        Map<String, Integer> mapMedia = createTaxonomyMapMediaFromJsonFile("wordpress_media.json");
+
+        Set<Integer> sectionPhoto = new HashSet<>();
+        sectionPhoto.add(9657);
+
+        for (Eikonologio eikonologio : eikonologioList) {
+            Photo photo = new Photo();
+            photo.setStatus("publish");
+//            photo.setDate(eikonologio.getDate());
+            photo.setDate(formatter.format(Calendar.getInstance().getTime()));
+            photo.setTitle(eikonologio.getText());
+            photo.setPhoto(getSingleMediaIdsByName(eikonologio.getImg(), mapMedia));
+            photo.setEditor(eikonologio.getText());
+            photo.setSectionPhoto(sectionPhoto);
+            photo.setOldWebisteId(eikonologio.getId().toString());
+            photo.setCommentStatus("closed");
+
+            photoList.add(photo);
+        }
+
+        createJsonFile(photoList, toFile);
+
+        return photoList;
+    }
+
+    public List<Taxonomy> createTaxonomyFromJsonFile(String filename) {
+        Taxonomy[] taxonomies = new ArticleAuthor[0];
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            taxonomies = mapper.readValue(jsonFileStream, ArticleAuthor[].class);
+
+            logger.info(String.format("found taxonomies %d ", taxonomies.length));
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return Arrays.asList(taxonomies);
+    }
+
+    public <T extends Object> List<T> getPostsAccordingToTypeFromJsonFile(String filename, Class<T> clazz) {
+        List posts = new ArrayList();
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream jsonFileStream = Files.newInputStream(Paths.get(filename));
+
+            if (clazz.getDeclaredConstructor().newInstance() instanceof Video) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Video[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Sound) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Sound[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Photo) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Photo[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Edafio) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Edafio[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Media) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Media[].class));
+            } else if (clazz.getDeclaredConstructor().newInstance() instanceof Eikonologio) {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Eikonologio[].class));
+            } else {
+                posts = Arrays.asList(mapper.readValue(jsonFileStream, Post[].class));
+            }
+
+            logger.info(String.format("found %d entries of type %s ", posts.size(), clazz.getName()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("There was an exception " + e.getMessage());
+        }
+        return posts;
+    }
+
+
 }
 
 

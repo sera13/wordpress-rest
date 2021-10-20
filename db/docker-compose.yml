@@ -1,0 +1,19 @@
+# Use root/example as user/password credentials
+version: '3.5'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: "agiazoni_dev"
+    ports:
+        - "3303:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: agiazoni
+
+  adminer:
+    image: adminer:4
+    restart: always
+    ports:
+      - 8083:8080
