@@ -21,25 +21,24 @@ public class RestClientUtil {
     public static final String WEBSITE_URL_LOCAL = "http://localhost:8081";
     public static final String WEBSITE_URL_PRODUCTION = "https://agiazoni.gr";
     public static final String WEBSITE_URL_SERAFEIMKOURLOS = "https://serafeimkourlos.xyz";
-    public static final String VIDEOS_ENDPOINT = "/wp-json/wp/v2/video_posts/";
-    public static final String SOUNDS_ENDPOINT = "/wp-json/wp/v2/sound_posts/";
-    public static final String PHOTOS_ENDPOINT = "/wp-json/wp/v2/photo_posts/";
-    public static final String POSTS_ENDPOINT = "/wp-json/wp/v2/posts/";
-    public static final String EDAFIA_ENDPOINT = "/wp-json/wp/v2/edafio/";
-    public static final String ARTICLE_AUTHORS_ENDPOINT = "/wp-json/wp/v2/article_authors/";
+    public static final String BASE_PATH = "/wp-json/wp";
+    public static final String VERSION = "/v2";
+    public static final String VIDEOS_ENDPOINT = "/video_posts/";
+    public static final String SOUNDS_ENDPOINT = "/sound_posts/";
+    public static final String PHOTOS_ENDPOINT = "/photo_posts/";
+    public static final String POSTS_ENDPOINT = "/posts/";
+    public static final String EDAFIA_ENDPOINT = "/edafio/";
+    public static final String ARTICLE_AUTHORS_ENDPOINT = "/article_authors/";
 
-
-    public static HttpHeaders getHttpHeaders() {
+    public static HttpHeaders getHttpHeaders(String username, String password) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-//      headers.setBasicAuth("serafeim", "NFBN57Z8sVXs!a1N(IsFMdT(");
-        headers.setBasicAuth("serafeim", "8rxc OXTR KUvH a8Jw kUHr OqG3");
+        headers.setBasicAuth(username, password);
         return headers;
     }
 
     @Bean
-    public static RestTemplate restTemplate()
-            throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+    public static RestTemplate restTemplate() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 
         SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()

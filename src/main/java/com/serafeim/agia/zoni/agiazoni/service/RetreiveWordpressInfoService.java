@@ -70,14 +70,13 @@ public class RetreiveWordpressInfoService {
         return posts;
     }
 
-    public List<Media> getAllMedia() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public List<Media> getAllMedia(String fromDate) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
         RestTemplate restTemplate = RestClientUtil.restTemplate();
         List<Media> mediaList = new ArrayList<>();
         int index = 1;
         while (true) {
-            String dateString = "2021-08-29T00:00:00";
-            Media[] partialMedia = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_PRODUCTION +"/wp-json/wp/v2/" + "media?after=" + dateString + "&media_type=image&per_page=100&page=" + index, Media[].class);
+            Media[] partialMedia = restTemplate.getForObject(RestClientUtil.WEBSITE_URL_PRODUCTION +"/wp-json/wp/v2/" + "media?after=" + fromDate + "&media_type=image&per_page=100&page=" + index, Media[].class);
             assert partialMedia != null;
             if (partialMedia.length > 0) {
                 mediaList.addAll(List.of(partialMedia));

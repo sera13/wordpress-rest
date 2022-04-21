@@ -140,7 +140,7 @@ public class AgiaZoniController {
 
     @GetMapping("/getAllMedia")
     public String getAllMedia() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        List<Media> mediaList = retreiveWordpressInfoService.getAllMedia();
+        List<Media> mediaList = retreiveWordpressInfoService.getAllMedia("2002-12-02T00:00:00");
         readJSONService.createJsonFile(mediaList, "wordpress_media.json");
         return "getAllMedia called " + mediaList.size();
     }

@@ -10,6 +10,7 @@ import com.serafeim.agia.zoni.agiazoni.dto.Video;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -31,9 +32,14 @@ import static com.serafeim.agia.zoni.agiazoni.service.RestClientUtil.getHttpHead
 @Service
 public class RestClientService {
     Logger logger = LoggerFactory.getLogger(RestClientService.class);
+    @Value("${basic.auth.username}")
+    String username;
+    @Value("${basic.auth.password}")
+    String password;
+
 
     public <T extends Post> void createPostsToWordpressAccordingPostType(List<T> posts, String url, int limit) {
-        HttpHeaders headers = getHttpHeaders();
+        HttpHeaders headers = getHttpHeaders(username,password);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters()
@@ -83,7 +89,7 @@ public class RestClientService {
     }
 
     public void updatePostsDate(List<Post> posts, String url) {
-        HttpHeaders headers = getHttpHeaders();
+        HttpHeaders headers = getHttpHeaders(username,password);
         URI uri;
         try {
 
@@ -102,7 +108,7 @@ public class RestClientService {
     }
 
     public void updateTaxonomyAuthor(List<Taxonomy> taxonomies, String url) {
-        HttpHeaders headers = getHttpHeaders();
+        HttpHeaders headers = getHttpHeaders(username,password);
 
         URI uri;
         try {
@@ -122,7 +128,7 @@ public class RestClientService {
     }
 
     public void updateVideoLinks(List<Post> posts, String url) {
-        HttpHeaders headers = getHttpHeaders();
+        HttpHeaders headers = getHttpHeaders(username,password);
 
         URI uri;
         try {
@@ -143,7 +149,7 @@ public class RestClientService {
     }
 
     public void updateEnnoima(List<Post> posts, String url) {
-        HttpHeaders headers = getHttpHeaders();
+        HttpHeaders headers = getHttpHeaders(username,password);
 
         URI uri;
         try {
